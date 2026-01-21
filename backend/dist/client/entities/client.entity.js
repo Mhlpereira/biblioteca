@@ -26,7 +26,7 @@ __decorate([
     __metadata("design:type", String)
 ], Client.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 11 }),
+    (0, typeorm_1.Column)({ unique: true, length: 11 }),
     __metadata("design:type", String)
 ], Client.prototype, "cpf", void 0);
 __decorate([
@@ -52,4 +52,4 @@ __decorate([
 exports.Client = Client = __decorate([
     (0, typeorm_1.Entity)()
 ], Client);
-//# sourceMappingURL=client.orm-entity.js.map
+//# sourceMappingURL=client.entity.js.map

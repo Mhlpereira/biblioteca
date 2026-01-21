@@ -7,7 +7,7 @@ export class Client{
     @PrimaryColumn({ type: 'char', length: 26 })
     id: string;
 
-    @Column({ unique: true, length: 11})
+    @Column({unique:true, length: 11})
     cpf: string;
 
     @Column()

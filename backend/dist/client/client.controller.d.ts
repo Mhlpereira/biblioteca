@@ -4,7 +4,7 @@ import { ClientService } from './client.service';
 export declare class ClientController {
     private readonly clientService;
     constructor(clientService: ClientService);
-    create(createClientDto: CreateClientDto): string;
+    create(createClientDto: CreateClientDto): Promise<import("./entities/client.entity").Client>;
     findAll(): string;
     findOne(id: string): string;
     update(id: string, updateClientDto: UpdateClientDto): string;

@@ -1,10 +1,10 @@
-import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { AuthService } from "./auth.service";
+import { RegisterDto } from "./dto/register.dto";
+import { RegisterOutputDto } from "./dto/output-register.dto";
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    createClient(createAuthDto: CreateAuthDto): string;
+    createClient(registerDto: RegisterDto): Promise<RegisterOutputDto>;
     findAll(): string;
     findOne(id: string): string;
     update(id: string, updateAuthDto: UpdateAuthDto): string;

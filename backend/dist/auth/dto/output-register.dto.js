@@ -9,47 +9,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Client = void 0;
-const typeorm_1 = require("typeorm");
-let Client = class Client {
+exports.RegisterOutputDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
+class RegisterOutputDto {
     id;
     cpf;
     name;
     lastName;
-    password;
     createdAt;
     updatedAt;
-};
-exports.Client = Client;
+}
+exports.RegisterOutputDto = RegisterOutputDto;
 __decorate([
-    (0, typeorm_1.PrimaryColumn)({ type: 'char', length: 26 }),
+    (0, swagger_1.ApiProperty)({ example: "01HXXXXXXXXXXXXXXXXXXXXX", description: "ID único do cliente" }),
     __metadata("design:type", String)
-], Client.prototype, "id", void 0);
+], RegisterOutputDto.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 11 }),
+    (0, swagger_1.ApiProperty)({ example: "12345678901", description: "CPF do cliente" }),
     __metadata("design:type", String)
-], Client.prototype, "cpf", void 0);
+], RegisterOutputDto.prototype, "cpf", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, swagger_1.ApiProperty)({ example: "João", description: "Nome do cliente" }),
     __metadata("design:type", String)
-], Client.prototype, "name", void 0);
+], RegisterOutputDto.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, swagger_1.ApiProperty)({ example: "Silva", description: "Sobrenome do cliente" }),
     __metadata("design:type", String)
-], Client.prototype, "lastName", void 0);
+], RegisterOutputDto.prototype, "lastName", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Client.prototype, "password", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, swagger_1.ApiProperty)({ example: "2023-01-01T00:00:00.000Z", description: "Data de criação" }),
     __metadata("design:type", Date)
-], Client.prototype, "createdAt", void 0);
+], RegisterOutputDto.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    (0, swagger_1.ApiProperty)({ example: "2023-01-01T00:00:00.000Z", description: "Data de atualização" }),
     __metadata("design:type", Date)
-], Client.prototype, "updatedAt", void 0);
-exports.Client = Client = __decorate([
-    (0, typeorm_1.Entity)()
-], Client);
-//# sourceMappingURL=client.orm-entity.js.map
+], RegisterOutputDto.prototype, "updatedAt", void 0);
+//# sourceMappingURL=output-register.dto.js.map

@@ -1,7 +1,12 @@
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { RegisterDto } from "./dto/register.dto";
+import { ClientService } from "../client/client.service";
+import { CryptoService } from "../common/crypto/crypto.service";
+import { RegisterOutputDto } from "./dto/output-register.dto";
 export declare class AuthService {
-    create(createAuthDto: CreateAuthDto): string;
+    private readonly clientService;
+    private readonly cryptoService;
+    constructor(clientService: ClientService, cryptoService: CryptoService);
+    createClient(registerDto: RegisterDto): Promise<RegisterOutputDto>;
     findAll(): string;
     findOne(id: number): string;
     update(id: number, updateAuthDto: UpdateAuthDto): string;
