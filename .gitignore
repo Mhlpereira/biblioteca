@@ -3,6 +3,14 @@
 /node_modules
 /build
 
+# Backend specific
+backend/dist
+backend/node_modules
+backend/coverage
+backend/.env
+backend/.env.local
+backend/.env.*.local
+
 # Logs
 logs
 *.log
