@@ -5,8 +5,8 @@ export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
     createClient(registerDto: RegisterDto): Promise<RegisterOutputDto>;
-    findAll(): string;
-    findOne(id: string): string;
+    findAll(): any;
+    findOne(id: string): any;
     update(id: string, updateAuthDto: UpdateAuthDto): string;
     remove(id: string): string;
 }

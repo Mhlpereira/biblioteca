@@ -1,3 +1,4 @@
+import { Client } from "../../client/entities/client.entity";
 export declare class RegisterOutputDto {
     id: string;
     cpf: string;
@@ -5,4 +6,5 @@ export declare class RegisterOutputDto {
     lastName: string;
     createdAt: Date;
     updatedAt: Date;
+    constructor(client: Client);
 }

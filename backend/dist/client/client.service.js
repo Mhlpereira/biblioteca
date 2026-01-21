@@ -26,7 +26,7 @@ let ClientService = class ClientService {
         this.clientRepository = clientRepository;
         this.cryptoService = cryptoService;
     }
-    async create(createClientDto) {
+    async createClient(createClientDto) {
         if (!(0, validar_cpf_1.default)(createClientDto.cpf)) {
             throw new common_1.BadRequestException("Cpf inválido");
         }
@@ -34,7 +34,13 @@ let ClientService = class ClientService {
         if (existingClient) {
             throw new common_1.BadRequestException("CPF já cadastrado");
         }
-        const client = this.clientRepository.create(createClientDto);
+        const client = this.clientRepository.create({
+            id: ulid(),
+            cpf: createClientDto.cpf,
+            name: createClientDto.name,
+            lastName: createClientDto.lastName,
+            password: createClientDto.password,
+        });
         return this.clientRepository.save(client);
     }
     findAll() {
@@ -57,4 +63,7 @@ exports.ClientService = ClientService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.Repository,
         crypto_service_1.CryptoService])
 ], ClientService);
+function ulid() {
+    throw new Error("Function not implemented.");
+}
 //# sourceMappingURL=client.service.js.map

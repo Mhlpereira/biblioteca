@@ -7,7 +7,7 @@ export declare class ClientService {
     private readonly clientRepository;
     private readonly cryptoService;
     constructor(clientRepository: Repository<Client>, cryptoService: CryptoService);
-    create(createClientDto: CreateClientDto): Promise<Client>;
+    createClient(createClientDto: CreateClientDto): Promise<Client>;
     findAll(): string;
     findOne(id: number): string;
     update(id: number, updateClientDto: UpdateClientDto): string;

@@ -37,6 +37,7 @@
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.28",
     "typeorm-naming-strategies": "^4.1.0",
+    "ulid": "^3.0.2",
     "validar-cpf": "^3.1.1"
   },
   "devDependencies": {

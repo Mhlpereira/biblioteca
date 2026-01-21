@@ -7,8 +7,7 @@ export declare class AuthService {
     private readonly cryptoService;
     constructor(clientService: ClientService, cryptoService: CryptoService);
     createClient(registerDto: RegisterDto): Promise<RegisterOutputDto>;
-    findAll(): string;
-    findOne(id: number): string;
+    getById(id: number): Promise<string>;
     update(id: number, updateAuthDto: UpdateAuthDto): string;
     remove(id: number): string;
 }

@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegisterOutputDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
+const cpf_mask_helper_1 = require("../../common/helper/cpf-mask.helper");
 class RegisterOutputDto {
     id;
     cpf;
@@ -18,30 +19,38 @@ class RegisterOutputDto {
     lastName;
     createdAt;
     updatedAt;
+    constructor(client) {
+        this.id = client.id;
+        this.cpf = (0, cpf_mask_helper_1.maskCpf)(client.cpf);
+        this.name = client.name;
+        this.lastName = client.lastName;
+        this.createdAt = client.createdAt;
+        this.updatedAt = client.updatedAt;
+    }
 }
 exports.RegisterOutputDto = RegisterOutputDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "01HXXXXXXXXXXXXXXXXXXXXX", description: "ID único do cliente" }),
+    (0, swagger_1.ApiProperty)({ example: "01HXXXXXXXXXXXXXXXXXXXXX" }),
     __metadata("design:type", String)
 ], RegisterOutputDto.prototype, "id", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "12345678901", description: "CPF do cliente" }),
+    (0, swagger_1.ApiProperty)({ example: "123.***.***-01" }),
     __metadata("design:type", String)
 ], RegisterOutputDto.prototype, "cpf", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "João", description: "Nome do cliente" }),
+    (0, swagger_1.ApiProperty)({ example: "João" }),
     __metadata("design:type", String)
 ], RegisterOutputDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "Silva", description: "Sobrenome do cliente" }),
+    (0, swagger_1.ApiProperty)({ example: "Silva" }),
     __metadata("design:type", String)
 ], RegisterOutputDto.prototype, "lastName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "2023-01-01T00:00:00.000Z", description: "Data de criação" }),
+    (0, swagger_1.ApiProperty)({ example: "2023-01-01T00:00:00.000Z" }),
     __metadata("design:type", Date)
 ], RegisterOutputDto.prototype, "createdAt", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: "2023-01-01T00:00:00.000Z", description: "Data de atualização" }),
+    (0, swagger_1.ApiProperty)({ example: "2023-01-01T00:00:00.000Z" }),
     __metadata("design:type", Date)
 ], RegisterOutputDto.prototype, "updatedAt", void 0);
 //# sourceMappingURL=output-register.dto.js.map

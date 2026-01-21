@@ -25,7 +25,7 @@ let AuthService = class AuthService {
             throw new common_1.BadRequestException("As senhas não coincidem");
         }
         const hashedPassword = await this.cryptoService.hash(registerDto.password);
-        const client = await this.clientService.create({
+        const client = await this.clientService.createClient({
             cpf: registerDto.cpf,
             name: registerDto.name,
             lastName: registerDto.lastName,
@@ -40,10 +40,7 @@ let AuthService = class AuthService {
             updatedAt: client.updatedAt,
         };
     }
-    findAll() {
-        return `This action returns all auth`;
-    }
-    findOne(id) {
+    async getById(id) {
         return `This action returns a #${id} auth`;
     }
     update(id, updateAuthDto) {

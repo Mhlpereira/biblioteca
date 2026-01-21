@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { UpdateClientDto } from "./dto/update-client.dto";
-import validarCpf from "validar-cpf";
-import { RegisterDto } from "../auth/dto/register.dto";
+import { cpf } from "cpf-cnpj-validator"; 
 import { CryptoService } from "../common/crypto/crypto.service";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Client } from "./entities/client.entity";
 import { Repository } from "typeorm";
 import { CreateClientDto } from "./dto/create-client.dto";
+import { ulid } from "ulid";
 
 @Injectable()
 export class ClientService {
@@ -16,8 +16,8 @@ export class ClientService {
         private readonly cryptoService: CryptoService
     ) {}
 
-    async create(createClientDto: CreateClientDto) {
-        if (!validarCpf(createClientDto.cpf)) {
+    async createClient(createClientDto: CreateClientDto) {
+        if (!cpf.isValid(createClientDto.cpf)) { // Usando cpf.isValid
             throw new BadRequestException("Cpf inválido");
         }
 
@@ -26,7 +26,13 @@ export class ClientService {
             throw new BadRequestException("CPF já cadastrado");
         }
 
-        const client = this.clientRepository.create(createClientDto);
+        const client = this.clientRepository.create({
+            id: ulid(), 
+            cpf: createClientDto.cpf,
+            name: createClientDto.name,
+            lastName: createClientDto.lastName,
+            password: createClientDto.password,
+        });
 
         return this.clientRepository.save(client);
     }
@@ -35,11 +41,11 @@ export class ClientService {
         return `This action returns all client`;
     }
 
-    findOne(id: number) {
+    async getById(id: string) {
         return `This action returns a #${id} client`;
     }
 
-    update(id: number, updateClientDto: UpdateClientDto) {
+    update(id: string, updateClientDto: UpdateClientDto) {
         return `This action updates a #${id} client`;
     }
 
