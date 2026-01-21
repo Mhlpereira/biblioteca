@@ -3,7 +3,6 @@ import { RegisterDto } from "./dto/register.dto";
 import { ClientService } from "../client/client.service";
 import { CryptoService } from "../common/crypto/crypto.service";
 import { RegisterOutputDto } from "./dto/output-register.dto";
-import { maskCpf } from "../common/helper/cpf-mask.helper";
 
 @Injectable()
 export class AuthService {
