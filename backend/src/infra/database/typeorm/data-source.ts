@@ -1,4 +1,6 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
@@ -11,6 +13,7 @@ export const dataSourceOptions: DataSourceOptions = {
   migrations: ['dist/infra/database/typeorm/migrations/*{.ts,.js}'],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV !== 'production',
+  namingStrategy: new SnakeNamingStrategy()
 };
 
 const dataSource = new DataSource(dataSourceOptions);
