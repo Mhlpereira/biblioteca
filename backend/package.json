@@ -28,6 +28,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "bcrypt": "^6.0.0",
     "class-validator": "^0.14.3",
+    "cpf-cnpj-validator": "^1.0.3",
     "mysql2": "^3.16.1",
     "nestjs-pino": "^4.5.0",
     "pino-http": "^11.0.0",
