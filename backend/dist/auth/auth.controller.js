@@ -22,7 +22,7 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    create(createAuthDto) {
+    createClient(createAuthDto) {
         return this.authService.create(createAuthDto);
     }
     findAll() {
@@ -40,12 +40,12 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Post)('register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_auth_dto_1.CreateAuthDto]),
     __metadata("design:returntype", void 0)
-], AuthController.prototype, "create", null);
+], AuthController.prototype, "createClient", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),

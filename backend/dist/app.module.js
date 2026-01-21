@@ -16,6 +16,7 @@ const client_module_1 = require("./client/client.module");
 const auth_module_1 = require("./auth/auth.module");
 const typeorm_module_1 = require("./infra/database/typeorm/typeorm.module");
 const nestjs_pino_1 = require("nestjs-pino");
+const crypto_module_1 = require("./common/crypto/crypto.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -38,6 +39,7 @@ exports.AppModule = AppModule = __decorate([
             reservation_module_1.ReservationModule,
             client_module_1.ClientModule,
             auth_module_1.AuthModule,
+            crypto_module_1.CryptoModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

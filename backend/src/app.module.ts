@@ -7,6 +7,7 @@ import { ClientModule } from "./client/client.module";
 import { AuthModule } from "./auth/auth.module";
 import { TypeormModule } from "./infra/database/typeorm/typeorm.module";
 import { LoggerModule } from "nestjs-pino";
+import { CryptoModule } from "./common/crypto/crypto.module";
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { LoggerModule } from "nestjs-pino";
         ReservationModule,
         ClientModule,
         AuthModule,
+        CryptoModule
     ],
     controllers: [AppController],
     providers: [AppService],

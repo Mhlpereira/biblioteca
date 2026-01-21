@@ -16,7 +16,7 @@ exports.ClientController = void 0;
 const common_1 = require("@nestjs/common");
 const create_client_dto_1 = require("./dto/create-client.dto");
 const update_client_dto_1 = require("./dto/update-client.dto");
-const client_service_1 = require("./application/client.service");
+const client_service_1 = require("./client.service");
 let ClientController = class ClientController {
     clientService;
     constructor(clientService) {

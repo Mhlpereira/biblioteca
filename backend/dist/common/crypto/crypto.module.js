@@ -6,17 +6,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ClientModule = void 0;
+exports.CryptoModule = void 0;
 const common_1 = require("@nestjs/common");
-const client_controller_1 = require("./client.controller");
-const client_service_1 = require("./client.service");
-let ClientModule = class ClientModule {
+const crypto_service_1 = require("./crypto.service");
+const bcrypt_crypto_1 = require("./bcrypt.crypto");
+let CryptoModule = class CryptoModule {
 };
-exports.ClientModule = ClientModule;
-exports.ClientModule = ClientModule = __decorate([
+exports.CryptoModule = CryptoModule;
+exports.CryptoModule = CryptoModule = __decorate([
     (0, common_1.Module)({
-        controllers: [client_controller_1.ClientController],
-        providers: [client_service_1.ClientService],
+        providers: [
+            {
+                provide: crypto_service_1.CryptoService,
+                useClass: bcrypt_crypto_1.BcryptCryptoService,
+            },
+        ],
+        exports: [crypto_service_1.CryptoService],
     })
-], ClientModule);
-//# sourceMappingURL=client.module.js.map
+], CryptoModule);
+//# sourceMappingURL=crypto.module.js.map
