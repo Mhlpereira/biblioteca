@@ -15,12 +15,24 @@ const reservation_module_1 = require("./reservation/reservation.module");
 const client_module_1 = require("./client/client.module");
 const auth_module_1 = require("./auth/auth.module");
 const typeorm_module_1 = require("./infra/database/typeorm/typeorm.module");
+const nestjs_pino_1 = require("nestjs-pino");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            nestjs_pino_1.LoggerModule.forRoot({
+                pinoHttp: {
+                    transport: {
+                        target: "pino-pretty",
+                        options: {
+                            colorize: true,
+                            singleLine: true,
+                        },
+                    },
+                },
+            }),
             typeorm_module_1.TypeormModule,
             book_module_1.BookModule,
             reservation_module_1.ReservationModule,
