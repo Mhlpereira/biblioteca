@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { UpdateClientDto } from "./dto/update-client.dto";
-import { cpf } from "cpf-cnpj-validator"; 
-import { CryptoService } from "../common/crypto/crypto.service";
+import { cpf } from "cpf-cnpj-validator";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Client } from "./entities/client.entity";
 import { Repository } from "typeorm";
@@ -13,25 +12,15 @@ export class ClientService {
     constructor(
         @InjectRepository(Client)
         private readonly clientRepository: Repository<Client>,
-        private readonly cryptoService: CryptoService
     ) {}
 
     async createClient(createClientDto: CreateClientDto) {
-        if (!cpf.isValid(createClientDto.cpf)) { // Usando cpf.isValid
-            throw new BadRequestException("Cpf inválido");
-        }
-
-        const existingClient = await this.clientRepository.findOneBy({ cpf: createClientDto.cpf });
-        if (existingClient) {
-            throw new BadRequestException("CPF já cadastrado");
-        }
+        this.validateCpf(createClientDto.cpf);
+        await this.verifyUniqueCpf(createClientDto.cpf);
 
         const client = this.clientRepository.create({
-            id: ulid(), 
-            cpf: createClientDto.cpf,
-            name: createClientDto.name,
-            lastName: createClientDto.lastName,
-            password: createClientDto.password,
+            id: ulid(),
+            ...createClientDto
         });
 
         return this.clientRepository.save(client);
@@ -51,5 +40,19 @@ export class ClientService {
 
     remove(id: number) {
         return `This action removes a #${id} client`;
+    }
+
+    private validateCpf(cpfValue: string) {
+        if (!cpf.isValid(cpfValue)) {
+            throw new BadRequestException("Cpf inválido");
+        }
+    }
+
+    private verifiyUniqueCpf(cpf: string) {}
+    private async verifyUniqueCpf(cpfValue: string) {
+        const exists = await this.clientRepository.findOneBy({ cpf: cpfValue });
+        if (exists) {
+            throw new BadRequestException("CPF já cadastrado");
+        }
     }
 }
