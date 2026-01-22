@@ -26,8 +26,8 @@ export class ClientService {
         return this.clientRepository.save(client);
     }
 
-    findAll() {
-        return `This action returns all client`;
+    async findByCpf(cpf: string): Promise< Client| null> {
+        return await this.clientRepository.findOneBy({cpf})
     }
 
     async getById(id: string) {
@@ -48,7 +48,6 @@ export class ClientService {
         }
     }
 
-    private verifiyUniqueCpf(cpf: string) {}
     private async verifyUniqueCpf(cpfValue: string) {
         const exists = await this.clientRepository.findOneBy({ cpf: cpfValue });
         if (exists) {

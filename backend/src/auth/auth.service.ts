@@ -1,14 +1,20 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { RegisterDto } from "./dto/register.dto";
 import { ClientService } from "../client/client.service";
 import { CryptoService } from "../common/crypto/crypto.service";
-import { RegisterOutputDto } from "./dto/output-register.dto";
+import { RegisterOutputDto } from "./dto/register-output.dto";
+import { LoginDto } from "./dto/login.dto";
+import { LoginOutputDto } from "./dto/login-output.dto";
+import { JwtService } from "@nestjs/jwt";
+import { JwtPayload } from "./types/jwt-payload.types";
+import { maskCpf } from "../common/helper/cpf-mask.helper";
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly clientService: ClientService,
-        private readonly cryptoService: CryptoService
+        private readonly cryptoService: CryptoService,
+        private readonly jwtService: JwtService
     ) {}
 
     async createClient(registerDto: RegisterDto): Promise<RegisterOutputDto> {
@@ -35,5 +41,37 @@ export class AuthService {
         };
     }
 
+    async login(loginDto: LoginDto): Promise<LoginOutputDto> {
 
+        const client = await this.clientService.findByCpf(loginDto.cpf);
+
+        if(!client){
+            throw new UnauthorizedException('Credenciais inválidas');
+        }
+
+        const isPasswordValid = await this.cryptoService.compare(
+            loginDto.password,
+            client.password
+        );
+
+        if(!isPasswordValid){
+            throw new UnauthorizedException('Credenciais inválidas');
+        }
+
+        const payload: JwtPayload = {
+            sub: client.id,
+            cpf: client.cpf,
+            name: client.name
+        }
+
+        return{
+            accessToken: this.jwtService.sign(payload),
+            user:{
+                id: client.id,
+                name: client.name,
+                cpf: maskCpf(client.cpf)
+            }
+        }
+        
+    }
 }

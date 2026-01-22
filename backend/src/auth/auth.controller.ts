@@ -2,10 +2,11 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode } from "@ne
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { RegisterOutputDto } from "./dto/output-register.dto";
+import { RegisterOutputDto } from "./dto/register-output.dto";
 import { Public } from "./decorators/public.decorator";
+import { LoginDto } from "./dto/login.dto";
 
-@Controller("auth")
+@Controller("")
 @Public()
 export class AuthController {
 
@@ -19,5 +20,11 @@ export class AuthController {
         return this.authService.createClient(registerDto);
     }
 
-
+    @Post("login")
+    @HttpCode(200)
+    @ApiOperation({ summary: "Log in system"})
+    @ApiResponse({ status: 200, description: "Logged"})
+    async login(@Body() loginDto: LoginDto){
+        return this.authService.login(loginDto);
+    }
 }
