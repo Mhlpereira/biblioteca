@@ -2,12 +2,13 @@ import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/
 import { RegisterDto } from "./dto/register.dto";
 import { ClientService } from "../client/client.service";
 import { CryptoService } from "../common/crypto/crypto.service";
-import { RegisterOutputDto } from "./dto/register-output.dto";
 import { LoginDto } from "./dto/login.dto";
-import { LoginOutputDto } from "./dto/login-output.dto";
 import { JwtService } from "@nestjs/jwt";
 import { JwtPayload } from "./types/jwt-payload.types";
 import { maskCpf } from "../common/helper/cpf-mask.helper";
+import { AuthUser } from "./types/auth-user.types";
+import { RegisterResult } from "./interface/registerResult.interface";
+import { LoginResult } from "./interface/loginResult.interface";
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,7 @@ export class AuthService {
         private readonly jwtService: JwtService
     ) {}
 
-    async createClient(registerDto: RegisterDto): Promise<RegisterOutputDto> {
+    async createClient(registerDto: RegisterDto): Promise<RegisterResult> {
         if (registerDto.password !== registerDto.confirmPassword) {
             throw new BadRequestException("As senhas não coincidem");
         }
@@ -41,7 +42,7 @@ export class AuthService {
         };
     }
 
-    async login(loginDto: LoginDto): Promise<LoginOutputDto> {
+    async login(loginDto: LoginDto): Promise<LoginResult> {
 
         const client = await this.clientService.findByCpf(loginDto.cpf);
 
@@ -73,5 +74,13 @@ export class AuthService {
             }
         }
         
+    }
+
+    me(user: AuthUser){
+        return{
+            id: user.userId,
+            cpf: user.cpf,
+            name: user.name
+        };
     }
 }
