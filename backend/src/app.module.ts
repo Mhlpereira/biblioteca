@@ -8,9 +8,16 @@ import { AuthModule } from "./auth/auth.module";
 import { TypeormModule } from "./infra/database/typeorm/typeorm.module";
 import { LoggerModule } from "nestjs-pino";
 import { CryptoModule } from "./common/crypto/crypto.module";
+import { ConfigModule } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
+import { JwtAuthGuard } from "./auth/jwt/jwt.auth-guard";
 
 @Module({
     imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: ['.env']
+        }),
         LoggerModule.forRoot({
             pinoHttp: {
                 transport: {
@@ -30,6 +37,11 @@ import { CryptoModule } from "./common/crypto/crypto.module";
         CryptoModule
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService,
+        {
+            provide: APP_GUARD,
+            useClass: JwtAuthGuard
+        }
+    ],
 })
 export class AppModule {}
