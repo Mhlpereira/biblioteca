@@ -1,13 +1,11 @@
 import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
-
-export class AddBookCopyDto{
-
+export class AddBookCopyDto {
     @IsNotEmpty()
     @IsString()
-    id: string;
+    bookId: string;
 
     @IsNotEmpty()
     @IsNumber()
-    numberCopies: number;
+    quantity: number;
 }

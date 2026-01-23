@@ -4,7 +4,7 @@ import { CreateBookDto } from "./dto/book-create.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { BookCreateOutput } from "./dto/book-create-output.dto";
-import { AddBookCopyDto } from "../book-copy/dto/copy-add.dto";
+import { AddBookCopyDto } from "../book-copy/dto/add-copy.dto";
 import { FindBooksQueryDto } from "./dto/find-book-query.dto";
 
 @Controller("books")
@@ -21,36 +21,38 @@ export class BookController {
         return this.bookService.createBook(createBookDto);
     }
 
-    @Post("add")
-    @HttpCode(200)
-    @ApiOperation({ summary: "Add book copy" })
-    @ApiResponse({ status: 201, description: "Book copy added" })
-    @ApiResponse({ status: 400, description: "Invalid request data" })
-    @ApiResponse({ status: 401, description: "Unauthorized" })
-    @ApiResponse({ status: 404, description: "Book doesnt exist" })
-    async addBookCopy(@Body() addBookCopy: AddBookCopyDto) {}
-
     @Get()
     @HttpCode(200)
-    @ApiOperation({summary: "Search books"})
-    @ApiResponse({status: 200, description: "List of books"})
+    @ApiOperation({ summary: "Search books" })
+    @ApiResponse({ status: 200, description: "List of books" })
+    @ApiResponse({ status: 404, description: "No books are found" })
     async findAll(@Query() query: FindBooksQueryDto) {
         return this.bookService.findAll(query);
     }
 
     @Get(":id")
+    @HttpCode(200)
+    @ApiOperation({ summary: "Find book by id" })
+    @ApiResponse({ status: 200, description: "Book found" })
+    @ApiResponse({ status: 404, description: "Book not found" })
     findOne(@Param("id") id: string) {
         return this.bookService.findBookById(id);
     }
 
     @Patch(":id")
+    @HttpCode(200)
+    @ApiOperation({ summary: "Update book info" })
+    @ApiResponse({ status: 200, description: "Book deactivated" })
+    @ApiResponse({ status: 404, description: "Book not found" })
     update(@Param("id") id: string, @Body() updateBookDto: UpdateBookDto) {
         return this.bookService.update(id, updateBookDto);
     }
 
     @Patch(":id/deactivate")
+    @HttpCode(200)
+    @ApiOperation({ summary: "Deactivate book" })
+    @ApiResponse({ status: 200, description: "Book deactivated", type: BookCreateOutput })
     async deativate(@Param("id") id: string) {
         return this.bookService.deactivate(id);
     }
 }
-

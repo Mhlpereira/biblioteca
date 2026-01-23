@@ -102,7 +102,7 @@ export class BookService {
         return this.bookRepository.save(book);
     }
 
-    async deactivate(id: string): Promise<void> {
+    async deactivate(id: string) {
         const book = await this.findBookById(id)
 
         book.active = false;
@@ -110,5 +110,7 @@ export class BookService {
         //adiciona lógica de reservas ativas
         
         await this.bookRepository.save(book);
+
+        return book;
     }
 }
