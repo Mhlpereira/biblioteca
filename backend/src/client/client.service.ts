@@ -30,8 +30,12 @@ export class ClientService {
     }
 
 
-    async findById(id: string): Promise<Client | null> {
-        return await this.clientRepository.findOneBy({ id });
+    async findByIdorThrow(id: string): Promise<Client> {
+        const client = await this.clientRepository.findOneBy({ id });
+        if(!client){
+            throw new NotFoundException("Cliente não encontrado.")
+        }
+        return client;
     }
 
     async findByCpf(cpf: string): Promise<Client | null> {
@@ -39,11 +43,7 @@ export class ClientService {
     }
 
     async update(id: string, data: UpdateClient) {
-        const client = await this.findById(id);
-
-        if (!client) {
-            throw new NotFoundException();
-        }
+        const client = await this.findByIdorThrow(id);
 
         if (data.name !== undefined) {
             client.name = data.name;
@@ -57,12 +57,8 @@ export class ClientService {
     }
 
     async changePassword(id: string, data: UpdatePassword) {
-        const client = await this.findById(id);
-
-        if (!client) {
-            throw new NotFoundException("Cliente não encontrado");
-        }
-
+        const client = await this.findByIdorThrow(id);
+        
         this.validatePassword(data.newPassword, data.confirmPassword);
 
         const isValid = await this.cryptoService.compare(data.currentPassword, client.password);

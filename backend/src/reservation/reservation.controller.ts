@@ -8,12 +8,12 @@ export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Post()
-  async book(@Body() createReservationDto: CreateReservationDto) {
+  async creat(@Body() createReservationDto: CreateReservationDto) {
     return this.reservationService.create(createReservationDto);
   }
 
   @Get()
-  findAll() {
+  findAllClientReservation() {
     return this.reservationService.findAll();
   }
 

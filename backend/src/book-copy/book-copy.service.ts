@@ -18,9 +18,9 @@ export class BookCopyService {
     ) {}
 
     async addCopyFromDto(data: AddBookCopyInput) {
-        const book = await this.bookRepository.findOneBy({id: data.bookId});
-        if(!book){
-            throw new NotFoundException("Livro não existe")
+        const book = await this.bookRepository.findOneBy({ id: data.bookId });
+        if (!book) {
+            throw new NotFoundException("Livro não existe");
         }
 
         return await this.addCopies(book, data.quantity);
@@ -39,6 +39,7 @@ export class BookCopyService {
 
         return copies;
     }
+
     async removeCopy(removeCopy: RemoveCopy) {
         const copy = await this.bookCopyRepository.findOne({
             where: { id: removeCopy.copyId },
@@ -50,12 +51,10 @@ export class BookCopyService {
         }
 
         if (copy.status !== BookCopyStatus.AVAILABLE) {
-            throw new BadRequestException(
-                `Não é possível remover a cópia. Status atual: ${copy.status}`
-            );
+            throw new BadRequestException(`Não é possível remover a cópia. Status atual: ${copy.status}`);
         }
 
-        copy.status = BookCopyStatus.REMOVED; 
+        copy.status = BookCopyStatus.REMOVED;
         await this.bookCopyRepository.save(copy);
 
         return {
@@ -65,4 +64,19 @@ export class BookCopyService {
         };
     }
 
+
+    async findAvailableCopyByBookId(bookId: string) {
+        const copyId = await this.bookCopyRepository.findOne({
+            where: {
+                book: { id: bookId }, 
+                status: BookCopyStatus.AVAILABLE
+            },
+        });
+
+        if(!copyId){
+            throw new NotFoundException("Sem livros disponiveis");
+        }
+
+        return copyId;
+    }
 }
