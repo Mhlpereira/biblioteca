@@ -9,6 +9,4 @@ export class BookCreateOutput{
     @ApiProperty({ example: "Douglas Adams" })
     author: string;
 
-    @ApiProperty({ example: "5" })
-    totalCopies: number;
 }

@@ -1,7 +1,5 @@
-
-
-export interface CreateBook{
+export interface CreateBook {
     title: string;
     author: string;
-    totalCopies: number;
+    quantity: number;
 }

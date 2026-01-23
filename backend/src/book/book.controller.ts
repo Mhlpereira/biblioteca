@@ -4,7 +4,7 @@ import { CreateBookDto } from "./dto/book-create.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { BookCreateOutput } from "./dto/book-create-output.dto";
-import { AddBookCopyDto } from "./dto/copy-add.dto";
+import { AddBookCopyDto } from "../book-copy/dto/copy-add.dto";
 import { FindBooksQueryDto } from "./dto/find-book-query.dto";
 
 @Controller("books")
@@ -31,26 +31,26 @@ export class BookController {
     async addBookCopy(@Body() addBookCopy: AddBookCopyDto) {}
 
     @Get()
+    @HttpCode(200)
+    @ApiOperation({summary: "Search books"})
+    @ApiResponse({status: 200, description: "List of books"})
     async findAll(@Query() query: FindBooksQueryDto) {
         return this.bookService.findAll(query);
     }
 
     @Get(":id")
-    async findAllCopiesWithStatus() {}
-
-    @Get(":id")
     findOne(@Param("id") id: string) {
-        return this.bookService.findOne(+id);
+        return this.bookService.findBookById(id);
     }
 
     @Patch(":id")
     update(@Param("id") id: string, @Body() updateBookDto: UpdateBookDto) {
-        return this.bookService.update(+id, updateBookDto);
+        return this.bookService.update(id, updateBookDto);
     }
 
-    @Delete(":id")
-    remove(@Param("id") id: string) {
-        return this.bookService.remove(+id);
+    @Patch(":id/deactivate")
+    async deativate(@Param("id") id: string) {
+        return this.bookService.deactivate(id);
     }
 }
 

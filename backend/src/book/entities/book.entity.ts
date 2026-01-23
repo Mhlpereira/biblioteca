@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { BookCopy } from "../../book-copy/entities/book-copy.entity";
 
 @Entity()
 export class Book {
@@ -11,11 +12,11 @@ export class Book {
     @Column()
     author: string;
 
-    @Column({ default: 0 })
-    totalCopies: number;
+    @OneToMany(() => BookCopy, copy => copy.book)
+    copies: BookCopy[];
 
-    @Column()
-    availableCopies: number;
+    @Column({default: true})
+    active: boolean;
 
     @CreateDateColumn()
     createdAt: Date;

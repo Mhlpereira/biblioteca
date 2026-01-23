@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, isString, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, isString, IsString, Min } from "class-validator";
 
 export class CreateBookDto {
 
@@ -11,6 +11,6 @@ export class CreateBookDto {
     author: string;
 
     @IsNotEmpty()
-    @IsNumber()
-    totalCopies:number;
+    @Min(1)
+    quantity: number;
 }

@@ -1,20 +1,20 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateBookDto } from "./dto/book-create.dto";
-import { UpdateBookDto } from "./dto/update-book.dto";
 import { Repository } from "typeorm";
 import { Book } from "./entities/book.entity";
 import { CreateBook } from "./interface/create-book.interface";
 import { CreateBookResponse } from "./interface/create-book-response.interface";
 import { ulid } from "ulid";
-import { BookCopy } from "../book-copy/entities/book-copy.entity";
+import { BookCopyService } from "../book-copy/book-copy.service";
+import { QueryBook } from "./interface/query-book.interface";
 import { BookCopyStatus } from "../book-copy/enum/book-status.enum";
-import { AddBookCopyInput } from "./interface/add-copy.interface";
+import { BookListResponse } from "./interface/list-book-response.interface";
+import { UpdateBook } from "./interface/update-book.interface";
 
 @Injectable()
 export class BookService {
     constructor(
         private readonly bookRepository: Repository<Book>,
-        private readonly bookCopyRepository: Repository<BookCopy>
+        private readonly bookCopyRepository: BookCopyService
     ) {}
 
     async createBook(data: CreateBook): Promise<CreateBookResponse> {
@@ -22,39 +22,14 @@ export class BookService {
 
         await this.bookRepository.save(book);
 
-        const copies = Array.from({ length: data.totalCopies }).map(() =>
-            this.bookCopyRepository.create({
-                id: ulid(),
-                book,
-                status: BookCopyStatus.AVAILABLE,
-            })
-        );
-
-        await this.bookCopyRepository.save(copies);
+        const copies = await this.bookCopyRepository.addCopies(book, data.quantity);
 
         return {
             id: book.id,
             title: book.title,
             author: book.author,
-            totalCopies: book.totalCopies,
+            copies: copies.length,
         };
-    }
-
-    async addCopy(data: AddBookCopyInput) {
-        const book = await this.findBookById(data.bookId);
-
-        const copies = Array.from({ length: data.quantity }).map(() =>
-            this.bookCopyRepository.create({
-                id: ulid(),
-                book,
-                status: BookCopyStatus.AVAILABLE,
-            })
-        );
-
-        await this.bookCopyRepository.save(copies);
-
-        book.totalCopies += data.quantity;
-        await this.bookRepository.save(book);
     }
 
     async findBookById(id: string): Promise<Book> {
@@ -67,19 +42,73 @@ export class BookService {
         return book;
     }
 
-    findAll() {
-        return `This action returns all book`;
+    async findAll(filters: QueryBook): Promise<BookListResponse[]> {
+        const qb = this.bookRepository
+            .createQueryBuilder("book")
+            .leftJoin("book.copies", "copy")
+            .select([
+                "book.id AS id",
+                "book.title AS title",
+                "book.author AS author",
+                "COUNT(copy.id) AS totalCopies",
+                `
+            SUM(
+                CASE 
+                    WHEN copy.status = :available THEN 1 
+                    ELSE 0 
+                END
+            ) AS availableCopies
+            `,
+            ])
+            .where("book.active = true")
+            .setParameter("available", BookCopyStatus.AVAILABLE)
+            .groupBy("book.id");
+
+        if (filters.title) {
+            qb.andWhere("book.title ILIKE :title", { title: `%${filters.title}%` });
+        }
+
+        if (filters.author) {
+            qb.andWhere("book.author ILIKE :author", { author: `%${filters.author}%` });
+        }
+
+        if (filters.onlyAvailable === true) {
+            qb.having("availableCopies > 0");
+        }
+
+        const raw = await qb.getRawMany();
+
+        return raw.map(r => ({
+            id: r.id,
+            title: r.title,
+            author: r.author,
+            totalCopies: Number(r.totalcopies),
+            availableCopies: Number(r.availablecopies),
+            hasAvailable: Number(r.availablecopies) > 0,
+        }));
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} book`;
+    async update(id: string, updateBook: UpdateBook) {
+        const book = await this.findBookById(id);
+
+        if (updateBook.title !== undefined) {
+            book.title = updateBook.title;
+        }
+
+        if (updateBook.author !== undefined) {
+            book.author = updateBook.author;
+        }
+
+        return this.bookRepository.save(book);
     }
 
-    update(id: number, updateBookDto: UpdateBookDto) {
-        return `This action updates a #${id} book`;
-    }
+    async deactivate(id: string): Promise<void> {
+        const book = await this.findBookById(id)
 
-    remove(id: number) {
-        return `This action removes a #${id} book`;
+        book.active = false;
+
+        //adiciona lógica de reservas ativas
+        
+        await this.bookRepository.save(book);
     }
 }

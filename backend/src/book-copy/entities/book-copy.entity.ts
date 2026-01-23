@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Book } from "../../book/entities/book.entity";
 import { BookCopyStatus } from "../enum/book-status.enum";
 
+@Index(["book" , "status"])
 @Entity()
 export class BookCopy {
     @PrimaryColumn({ type: "char", length: 26 })
