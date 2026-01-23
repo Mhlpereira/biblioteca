@@ -30,9 +30,6 @@ export class Reservation {
     })
     status: ReservationStatus;
 
-    @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
-    fineAmount: number;
-
     @CreateDateColumn()
     createdAt: Date;
 
