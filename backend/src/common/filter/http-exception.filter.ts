@@ -1,7 +1,7 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-@Catch() // O @Catch vazio pega TUDO (HttpException e erros desconhecidos)
+@Catch() 
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
