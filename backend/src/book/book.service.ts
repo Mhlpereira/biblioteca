@@ -6,8 +6,8 @@ import { Book } from "./entities/book.entity";
 import { CreateBook } from "./interface/create-book.interface";
 import { CreateBookResponse } from "./interface/create-book-response.interface";
 import { ulid } from "ulid";
-import { BookCopy } from "./entities/book-copy.entity";
-import { BookCopyStatus } from "./enum/book-status.enum";
+import { BookCopy } from "../book-copy/entities/book-copy.entity";
+import { BookCopyStatus } from "../book-copy/enum/book-status.enum";
 import { AddBookCopyInput } from "./interface/add-copy.interface";
 
 @Injectable()
@@ -57,7 +57,7 @@ export class BookService {
         await this.bookRepository.save(book);
     }
 
-    private async findBookById(id: string): Promise<Book> {
+    async findBookById(id: string): Promise<Book> {
         const book = await this.bookRepository.findOneBy({ id });
 
         if (!book) {
@@ -66,6 +66,7 @@ export class BookService {
 
         return book;
     }
+
     findAll() {
         return `This action returns all book`;
     }

@@ -1,12 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query } from "@nestjs/common";
 import { BookService } from "./book.service";
 import { CreateBookDto } from "./dto/book-create.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { BookCreateOutput } from "./dto/book-create-output.dto";
 import { AddBookCopyDto } from "./dto/copy-add.dto";
+import { FindBooksQueryDto } from "./dto/find-book-query.dto";
 
-@Controller("book")
+@Controller("books")
 export class BookController {
     constructor(private readonly bookService: BookService) {}
 
@@ -27,14 +28,15 @@ export class BookController {
     @ApiResponse({ status: 400, description: "Invalid request data" })
     @ApiResponse({ status: 401, description: "Unauthorized" })
     @ApiResponse({ status: 404, description: "Book doesnt exist" })
-    async addBookCopy(@Body() addBookCopy: AddBookCopyDto){
-
-    }
+    async addBookCopy(@Body() addBookCopy: AddBookCopyDto) {}
 
     @Get()
-    async findAll() {
-        return this.bookService.findAll();
+    async findAll(@Query() query: FindBooksQueryDto) {
+        return this.bookService.findAll(query);
     }
+
+    @Get(":id")
+    async findAllCopiesWithStatus() {}
 
     @Get(":id")
     findOne(@Param("id") id: string) {
@@ -51,3 +53,4 @@ export class BookController {
         return this.bookService.remove(+id);
     }
 }
+

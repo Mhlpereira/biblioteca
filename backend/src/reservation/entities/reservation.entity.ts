@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
-import { BookCopy } from "../../book/entities/book-copy.entity";
+import { BookCopy } from "../../book-copy/entities/book-copy.entity";
 import { Client } from "../../client/entities/client.entity";
 import { ReservationStatus } from "../enum/reservation-status.enum";
 

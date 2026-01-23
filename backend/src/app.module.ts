@@ -11,6 +11,7 @@ import { CryptoModule } from "./common/crypto/crypto.module";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/jwt/jwt.auth-guard";
+import { BookCopyModule } from './book-copy/book-copy.module';
 
 @Module({
     imports: [
@@ -34,7 +35,8 @@ import { JwtAuthGuard } from "./auth/jwt/jwt.auth-guard";
         ReservationModule,
         ClientModule,
         AuthModule,
-        CryptoModule
+        CryptoModule,
+        BookCopyModule
     ],
     controllers: [AppController],
     providers: [AppService,

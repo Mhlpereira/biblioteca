@@ -14,6 +14,9 @@ export class Book {
     @Column({ default: 0 })
     totalCopies: number;
 
+    @Column()
+    availableCopies: number;
+
     @CreateDateColumn()
     createdAt: Date;
 

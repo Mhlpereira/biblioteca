@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from "typeorm";
-import { Book } from "./book.entity";
+import { Book } from "../../book/entities/book.entity";
 import { BookCopyStatus } from "../enum/book-status.enum";
 
 @Entity()
