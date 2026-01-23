@@ -6,7 +6,6 @@ import { LoginDto } from "./dto/login.dto";
 import { JwtService } from "@nestjs/jwt";
 import { JwtPayload } from "./types/jwt-payload.types";
 import { maskCpf } from "../common/helper/cpf-mask.helper";
-import { AuthUser } from "./types/auth-user.types";
 import { RegisterResult } from "./interface/registerResult.interface";
 import { LoginResult } from "./interface/loginResult.interface";
 
@@ -43,44 +42,45 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto): Promise<LoginResult> {
-
-        const client = await this.clientService.findByCpf(loginDto.cpf);
-
-        if(!client){
-            throw new UnauthorizedException('Credenciais inválidas');
-        }
-
-        const isPasswordValid = await this.cryptoService.compare(
-            loginDto.password,
-            client.password
-        );
-
-        if(!isPasswordValid){
-            throw new UnauthorizedException('Credenciais inválidas');
-        }
+        const client = await this.validateCredentials(loginDto.cpf, loginDto.password);
 
         const payload: JwtPayload = {
             sub: client.id,
             cpf: client.cpf,
-            name: client.name
-        }
+            name: client.name,
+        };
 
-        return{
+        return {
             accessToken: this.jwtService.sign(payload),
-            user:{
+            user: {
                 id: client.id,
                 name: client.name,
-                cpf: maskCpf(client.cpf)
-            }
-        }
-        
+                cpf: maskCpf(client.cpf),
+            },
+        };
     }
 
-    me(user: AuthUser){
-        return{
-            id: user.userId,
+    async validateCredentials(cpf: string, password: string) {
+        const client = await this.clientService.findByCpf(cpf);
+
+        if (!client) {
+            throw new UnauthorizedException("Credenciais inválidas");
+        }
+
+        const isValid = await this.cryptoService.compare(password, client.password);
+
+        if (!isValid) {
+            throw new UnauthorizedException("Credenciais inválidas");
+        }
+
+        return client;
+    }
+
+    me(user: JwtPayload) {
+        return {
+            id: user.sub,
             cpf: user.cpf,
-            name: user.name
+            name: user.name,
         };
     }
 }

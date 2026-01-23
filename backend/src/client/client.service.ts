@@ -1,17 +1,20 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { UpdateClientDto } from "./dto/update-client.dto";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { cpf } from "cpf-cnpj-validator";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Client } from "./entities/client.entity";
 import { Repository } from "typeorm";
-import { CreateClientDto } from "./dto/create-client.dto";
+import { CreateClientDto } from "./interface/create-client.interface";
 import { ulid } from "ulid";
+import { UpdateClient } from "./interface/update-client.interface";
+import { CryptoService } from "../common/crypto/crypto.service";
+import { UpdatePassword } from "./interface/update-password.interface";
 
 @Injectable()
 export class ClientService {
     constructor(
         @InjectRepository(Client)
         private readonly clientRepository: Repository<Client>,
+        private readonly cryptoService: CryptoService
     ) {}
 
     async createClient(createClientDto: CreateClientDto) {
@@ -20,26 +23,63 @@ export class ClientService {
 
         const client = this.clientRepository.create({
             id: ulid(),
-            ...createClientDto
+            ...createClientDto,
         });
 
         return this.clientRepository.save(client);
     }
 
-    async findByCpf(cpf: string): Promise< Client| null> {
-        return await this.clientRepository.findOneBy({cpf})
+
+    async findById(id: string): Promise<Client | null> {
+        return await this.clientRepository.findOneBy({ id });
     }
 
-    async getById(id: string) {
-        return `This action returns a #${id} client`;
+    async findByCpf(cpf: string): Promise<Client | null> {
+        return await this.clientRepository.findOneBy({ cpf });
     }
 
-    update(id: string, updateClientDto: UpdateClientDto) {
-        return `This action updates a #${id} client`;
+    async update(id: string, data: UpdateClient) {
+        const client = await this.findById(id);
+
+        if (!client) {
+            throw new NotFoundException();
+        }
+
+        if (data.name !== undefined) {
+            client.name = data.name;
+        }
+
+        if (data.lastName !== undefined) {
+            client.lastName = data.lastName;
+        }
+
+        return this.clientRepository.save(client);
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} client`;
+    async changePassword(id: string, data: UpdatePassword) {
+        const client = await this.findById(id);
+
+        if (!client) {
+            throw new NotFoundException("Cliente não encontrado");
+        }
+
+        this.validatePassword(data.newPassword, data.confirmPassword);
+
+        const isValid = await this.cryptoService.compare(data.currentPassword, client.password);
+
+        if (!isValid) {
+            throw new BadRequestException("Senha atual inválida");
+        }
+
+        client.password = await this.cryptoService.hash(data.newPassword);
+
+        await this.clientRepository.save(client);
+
+        return {message: "Senha alterada com sucesso!"};
+    }
+
+    async deleteClient(id:string){
+        //colocar lógica para tirar reservas no nome dele
     }
 
     private validateCpf(cpfValue: string) {
@@ -52,6 +92,12 @@ export class ClientService {
         const exists = await this.clientRepository.findOneBy({ cpf: cpfValue });
         if (exists) {
             throw new BadRequestException("CPF já cadastrado");
+        }
+    }
+
+    private validatePassword(newPassword: string, confirmPassword: string) {
+        if(newPassword !== confirmPassword){
+        throw new BadRequestException("As senhas não conferem");
         }
     }
 }

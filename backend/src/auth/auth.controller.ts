@@ -7,6 +7,8 @@ import { Public } from "./decorators/public.decorator";
 import { LoginDto } from "./dto/login.dto";
 import { JwtAuthGuard } from "./jwt/jwt.auth-guard";
 import { Response } from "express";
+import { CurrentUser } from "../common/decorator/current-user.decorator";
+import { JwtPayload } from "./types/jwt-payload.types";
 
 @Controller("")
 @Public()
@@ -40,8 +42,8 @@ export class AuthController {
     @Get("me")
     @ApiOperation({ summary: "Get authenticated user" })
     @ApiResponse({ status: 200, description: "Authenticated user" })
-    me(@Req() req) {
-        return this.authService.me(req.user);
+    me(@CurrentUser() user: JwtPayload) {
+        return this.authService.me(user);
     }
     
     @UseGuards(JwtAuthGuard)
