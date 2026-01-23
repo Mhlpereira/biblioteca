@@ -45,10 +45,12 @@ export class AuthController {
     me(@CurrentUser() user: JwtPayload) {
         return this.authService.me(user);
     }
-    
+
     @UseGuards(JwtAuthGuard)
     @Post("logout")
     @HttpCode(200)
+    @ApiOperation({ summary: "logout" })
+    @ApiResponse({ status: 204, description: "system logout" })
     logout(@Res({ passthrough: true }) res: Response) {
         res.clearCookie("access_token", {
             httpOnly: true,
