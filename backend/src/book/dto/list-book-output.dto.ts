@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { PaginationDto } from "../../common/dto/pagination.dto";
 
-export class BookListResponseDto {
+export class BookListResponseDto extends PaginationDto {
     @ApiProperty({ example: "01HXXXXXXXXXXXXXXXXXXXXX" })
     id: string;
 

@@ -64,7 +64,6 @@ export class BookCopyService {
         };
     }
 
-
     async findAvailableCopyByBookId(bookId: string) {
         const copyId = await this.bookCopyRepository.findOne({
             where: {
@@ -78,5 +77,9 @@ export class BookCopyService {
         }
 
         return copyId;
+    }
+
+    async updateStatus(copyId: string, AVAILABLE: BookCopyStatus){
+
     }
 }

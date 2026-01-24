@@ -2,6 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ReservationService } from './reservation.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { FindReservationDto } from './dto/find-reservation.dto';
+import { CurrentUser } from '../common/decorator/current-user.decorator';
+import { JwtPayload } from '../auth/types/jwt-payload.types';
 
 @Controller('reservation')
 export class ReservationController {
@@ -13,22 +16,27 @@ export class ReservationController {
   }
 
   @Get()
-  findAllClientReservation() {
-    return this.reservationService.findAll();
+  async findAllWithParameters(@Param() findReservationDto:FindReservationDto) {
+    return this.reservationService.findAll(findReservationDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.reservationService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return this.reservationService.findOne(id);
+  }
+
+  @Get('me')
+  async findAuthClientReservations(@CurrentUser() user: JwtPayload){
+    return this.reservationService.findAuthClientReservation(user.sub);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateReservationDto: UpdateReservationDto) {
-    return this.reservationService.update(+id, updateReservationDto);
+  async update(@Param('id') id: string, @Body() updateReservationDto: UpdateReservationDto) {
+    return this.reservationService.update(id, updateReservationDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.reservationService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return this.reservationService.remove(id);
   }
 }
