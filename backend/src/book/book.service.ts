@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Book } from "./entities/book.entity";
 import { CreateBook } from "./interface/create-book.interface";
@@ -13,6 +14,7 @@ import { UpdateBook } from "./interface/update-book.interface";
 @Injectable()
 export class BookService {
     constructor(
+        @InjectRepository(Book)
         private readonly bookRepository: Repository<Book>,
         private readonly bookCopyRepository: BookCopyService
     ) {}

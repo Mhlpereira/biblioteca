@@ -15,7 +15,7 @@ export class ClientController {
     @ApiResponse({ status: 200, description: "Client found" })
     @ApiResponse({ status: 404, description: "Client not found" })
     async getById(@Param("id") id: string) {
-        return this.clientService.findById(id);
+        return this.clientService.findByIdorThrow(id);
     }
 
     @Patch("me")

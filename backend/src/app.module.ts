@@ -5,19 +5,20 @@ import { BookModule } from "./book/book.module";
 import { ReservationModule } from "./reservation/reservation.module";
 import { ClientModule } from "./client/client.module";
 import { AuthModule } from "./auth/auth.module";
-import { TypeormModule } from "./infra/database/typeorm/typeorm.module";
 import { LoggerModule } from "nestjs-pino";
 import { CryptoModule } from "./common/crypto/crypto.module";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/jwt/jwt.auth-guard";
-import { BookCopyModule } from './book-copy/book-copy.module';
+import { BookCopyModule } from "./book-copy/book-copy.module";
+import { dataSourceOptions } from "./infra/database/typeorm/data-source";
+import { TypeOrmModule } from "@nestjs/typeorm";
 
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
-            envFilePath: ['.env']
+            envFilePath: [".env"],
         }),
         LoggerModule.forRoot({
             pinoHttp: {
@@ -30,20 +31,23 @@ import { BookCopyModule } from './book-copy/book-copy.module';
                 },
             },
         }),
-        TypeormModule,
+        TypeOrmModule.forRootAsync({
+            useFactory: async () => dataSourceOptions,
+        }),
         BookModule,
         ReservationModule,
         ClientModule,
         AuthModule,
         CryptoModule,
-        BookCopyModule
+        BookCopyModule,
     ],
     controllers: [AppController],
-    providers: [AppService,
+    providers: [
+        AppService,
         {
             provide: APP_GUARD,
-            useClass: JwtAuthGuard
-        }
+            useClass: JwtAuthGuard,
+        },
     ],
 })
 export class AppModule {}

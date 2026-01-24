@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectRepository, InjectDataSource } from "@nestjs/typeorm";
 import { Reservation } from "./entities/reservation.entity";
 import { DataSource, Repository } from "typeorm";
 import { ClientService } from "../client/client.service";
@@ -22,6 +22,7 @@ export class ReservationService {
         private readonly reservatioRepository: Repository<Reservation>,
         private readonly clientService: ClientService,
         private readonly bookCopyService: BookCopyService,
+        @InjectDataSource()
         private dataSource: DataSource
     ) {}
 
