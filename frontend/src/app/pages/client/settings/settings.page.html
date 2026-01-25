@@ -12,15 +12,30 @@
 
     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
         <h2 class="text-lg font-semibold text-slate-800 mb-4">Dados Pessoais</h2>
+        
         <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-700">Nome Completo</label>
-                <input
-                    formControlName="name"
-                    type="text"
-                    class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Nome</label>
+                    <input
+                        formControlName="name"
+                        type="text"
+                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Sobrenome</label>
+                    <input
+                        formControlName="lastName"
+                        type="text"
+                        class="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                </div>
             </div>
+
             <div class="flex justify-end">
                 <button
                     type="submit"
@@ -67,7 +82,7 @@
     </div>
 
     <div class="bg-red-50 p-6 rounded-xl border border-red-100">
-        <h2 class="text-lg font-semibold text-red-800 mb-2">Zona de Perigo</h2>
+        <h2 class="text-lg font-semibold text-red-800 mb-2">Deletar a conta</h2>
         <p class="text-sm text-red-600 mb-4">
             Uma vez que você deletar sua conta, não há como voltar atrás. Por favor, tenha certeza.
         </p>

@@ -7,6 +7,7 @@ import { CatalogPage } from "./pages/client/catalog/catalog.page";
 import { NotFound } from "./pages/not-found/not-found.page";
 import { DashboardPage } from "./pages/client/dashboard/dashboard.page";
 import { SettingsPage } from "./pages/client/settings/settings.page";
+import { UsersPage } from "./pages/admin/clients/user.page";
 
 export const routes: Routes = [
     { path: "", component: LoginPage },
@@ -14,6 +15,7 @@ export const routes: Routes = [
     { path: "catalogo", component: CatalogPage },
     { path: "home", component: DashboardPage },
     { path: "settings", component: SettingsPage },
+    { path: "users", component: UsersPage },
 
     { path: "", component: SidebarComponent, canActivate: [authGuard], children: [] },
 

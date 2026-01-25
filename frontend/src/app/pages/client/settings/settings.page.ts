@@ -1,8 +1,9 @@
-import { Component, inject } from "@angular/core";
+import { Component, inject, OnInit } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ClientService } from "../../../services/client.service";
-import { AuthService } from "../../../services/auth.service";
+import { AuthService } from "../../../services/auth.service"; // Para logout após deletar
 import { CommonModule } from "@angular/common";
+import { UserStore } from "../../../core/stores/user.store";
 
 @Component({
     selector: "app-settings-page",
@@ -10,16 +11,18 @@ import { CommonModule } from "@angular/common";
     imports: [CommonModule, ReactiveFormsModule],
     templateUrl: "./settings.page.html",
 })
-export class SettingsPage {
+export class SettingsPage implements OnInit {
     private fb = inject(FormBuilder);
     private clientService = inject(ClientService);
     private authService = inject(AuthService);
+    private userStore = inject(UserStore);
 
     isLoading = false;
     message = { type: "", text: "" };
 
     profileForm = this.fb.group({
         name: ["", [Validators.required]],
+        lastName: ["", [Validators.required]],
         cpf: [""],
     });
 
@@ -27,6 +30,15 @@ export class SettingsPage {
         oldPassword: ["", [Validators.required]],
         newPassword: ["", [Validators.required, Validators.minLength(8)]],
     });
+
+    ngOnInit() {
+        const user = this.userStore.user(); 
+        if (user) {
+            this.profileForm.patchValue({
+                name: user.name
+            });
+        }
+    }
 
     onUpdateProfile() {
         if (this.profileForm.invalid) return;
