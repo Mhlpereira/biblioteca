@@ -21,6 +21,9 @@ export class BookService {
             if (query.onlyAvailable) params = params.set("onlyAvailable", "true");
         }
 
+        if (!params.has("page")) params = params.set("page", 1);
+        if (!params.has("limit")) params = params.set("limit", 10);
+
         return this.http.get<PaginatedResult<Book>>(this.API_URL, { params });
     }
 }

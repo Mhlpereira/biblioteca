@@ -2,6 +2,8 @@ export interface FindBooksQuery {
     title?: string;
     author?: string;
     onlyAvailable?: boolean;
+    page?: number;
+    limit?: number;
 }
 
 export interface Book {

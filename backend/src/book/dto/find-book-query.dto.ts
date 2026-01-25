@@ -1,7 +1,8 @@
 import { IsBoolean, IsOptional, IsString } from "class-validator";
+import { PaginationDto } from "../../common/dto/pagination.dto";
 
 
-export class FindBooksQueryDto{
+export class FindBooksQueryDto extends PaginationDto{
 
     @IsString()
     @IsOptional()
@@ -14,4 +15,6 @@ export class FindBooksQueryDto{
     @IsBoolean()
     @IsOptional()
     onlyAvailable?: boolean;
+
+
 }
