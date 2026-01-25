@@ -11,7 +11,7 @@ import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "./types/jwt-payload.types";
 import { LoginOutputDto } from "./dto/login-output.dto";
 
-@Controller("")
+@Controller("auth")
 @Public()
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
