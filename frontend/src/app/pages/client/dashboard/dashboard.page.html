@@ -1,0 +1,140 @@
+<div class="space-y-6">
+    <div
+        class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-100"
+    >
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Olá, {{ userStore.user()?.name }}! 👋</h1>
+            <p class="text-slate-500 mt-1">Aqui está o resumo dos seus empréstimos.</p>
+        </div>
+
+        <a
+            routerLink="/catalog"
+            class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+        >
+            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Novo Empréstimo
+        </a>
+    </div>
+
+    <div>
+        <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+            </svg>
+            Meus Livros Reservados
+        </h2>
+
+        @if (isLoading) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 h-40 animate-pulse">
+                <div class="h-4 bg-slate-200 rounded w-3/4 mb-4"></div>
+                <div class="h-3 bg-slate-200 rounded w-1/2 mb-2"></div>
+                <div class="h-3 bg-slate-200 rounded w-1/4"></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 h-40 animate-pulse"></div>
+        </div>
+        } @else {
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (res of reservations; track res.id) {
+            <div
+                class="group bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all flex flex-col"
+            >
+                <div class="p-5 flex-1 flex flex-col">
+                    <div class="flex justify-between items-start mb-4">
+                        @if (isOverdue(res)) {
+                        <span
+                            class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center"
+                        >
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span> Atrasado
+                        </span>
+                        } @else {
+                        <span
+                            class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center"
+                        >
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span> Ativo
+                        </span>
+                        }
+                        <span class="text-xs text-slate-400">#{{ res.id | slice:0:6 }}</span>
+                    </div>
+
+                    <div class="flex gap-4 mb-3">
+                        <div class="w-16 h-24 flex-shrink-0 bg-gray-200 rounded overflow-hidden relative">
+                            <img
+                                [src]="res.bookImage || 'assets/placeholder-book.png'"
+                                alt="Capa"
+                                class="w-full h-full object-cover"
+                            />
+                        </div>
+
+                        <div class="flex-1">
+                            <h3 class="font-bold text-slate-800 line-clamp-2 leading-tight" title="{{ res.bookTitle }}">
+                                {{ res.bookTitle }}
+                            </h3>
+                            <p class="text-sm text-slate-500 mt-1">{{ res.author || 'Autor desconhecido' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3 mt-auto space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Retirado em:</span>
+                            <span class="font-medium text-slate-700">{{ res.reservedAt | date:'dd/MM/yyyy' }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Devolução:</span>
+                            <span
+                                class="font-medium"
+                                [class.text-red-600]="isOverdue(res)"
+                                [class.text-slate-700]="!isOverdue(res)"
+                            >
+                                {{ res.dueDate | date:'dd/MM/yyyy' }}
+                            </span>
+                        </div>
+
+                        @if (res.fineAmount && res.fineAmount > 0) {
+                        <div class="flex justify-between bg-red-50 p-2 rounded mt-2">
+                            <span class="text-red-600 font-bold text-xs uppercase">Multa Pendente</span>
+                            <span class="text-red-700 font-bold">{{ res.fineAmount | currency:'BRL' }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            } @empty {
+            <div
+                class="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-xl border border-dashed border-slate-300 text-center"
+            >
+                <div class="bg-blue-50 p-4 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-slate-900">Você não tem reservas ativas</h3>
+                <p class="text-slate-500 max-w-sm mt-1 mb-6">
+                    Explore nosso catálogo e encontre sua próxima leitura agora mesmo.
+                </p>
+
+                <a
+                    routerLink="/catalog"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    Ir para o Catálogo
+                </a>
+            </div>
+            }
+        </div>
+        }
+    </div>
+</div>
