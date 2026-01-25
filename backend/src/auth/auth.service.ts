@@ -63,7 +63,7 @@ export class AuthService {
     async validateCredentials(cpf: string, password: string) {
         const client = await this.clientService.findByCpf(cpf);
 
-        if (!client) {
+        if (!client || !client.active) {
             throw new UnauthorizedException("Credenciais inválidas");
         }
 

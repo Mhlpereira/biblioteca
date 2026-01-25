@@ -9,6 +9,7 @@ import { JwtAuthGuard } from "./jwt/jwt.auth-guard";
 import { Response } from "express";
 import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "./types/jwt-payload.types";
+import { LoginOutputDto } from "./dto/login-output.dto";
 
 @Controller("")
 @Public()
@@ -27,7 +28,7 @@ export class AuthController {
     @HttpCode(200)
     @ApiOperation({ summary: "Log in system" })
     @ApiResponse({ status: 200, description: "Logged" })
-    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<LoginOutputDto>{
         const logged = await this.authService.login(loginDto);
 
         res.cookie("access_token", logged.accessToken, {
@@ -36,6 +37,8 @@ export class AuthController {
             sameSite: "lax",
             maxAge: 2 * 60 * 60 * 1000,
         });
+
+        return logged.user;
     }
 
     @UseGuards(JwtAuthGuard)

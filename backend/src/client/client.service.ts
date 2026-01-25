@@ -8,13 +8,15 @@ import { ulid } from "ulid";
 import { UpdateClient } from "./interface/update-client.interface";
 import { CryptoService } from "../common/crypto/crypto.service";
 import { UpdatePassword } from "./interface/update-password.interface";
+import { ReservationService } from "../reservation/reservation.service";
 
 @Injectable()
 export class ClientService {
     constructor(
         @InjectRepository(Client)
         private readonly clientRepository: Repository<Client>,
-        private readonly cryptoService: CryptoService
+        private readonly cryptoService: CryptoService,
+        private readonly reservationService: ReservationService
     ) {}
 
     async createClient(createClientDto: CreateClientDto) {
@@ -75,7 +77,16 @@ export class ClientService {
     }
 
     async deleteClient(id:string){
-        //colocar lógica para tirar reservas no nome dele
+        const client = await this.findByIdorThrow(id);
+
+        const {data: reservations} = await this.reservationService.findAuthClientReservation(client.id);
+        if(reservations){
+            for(const reservation of reservations){
+                await this.reservationService.remove(reservation.id)
+            }
+        }
+
+        client.active = false
     }
 
     private validateCpf(cpfValue: string) {

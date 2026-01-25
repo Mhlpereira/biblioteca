@@ -19,6 +19,9 @@ export class Client{
     @Column({select: false})
     password: string;
 
+    @Column({default: true})
+    active: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 

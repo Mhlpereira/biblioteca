@@ -18,6 +18,9 @@ export class Book {
     @Column({default: true})
     active: boolean;
 
+    @Column()
+    imageUrl: string;
+
     @CreateDateColumn()
     createdAt: Date;
 
