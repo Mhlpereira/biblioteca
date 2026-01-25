@@ -4,6 +4,7 @@ export interface ReservationListResponse {
     id: string;
     clientName: string;
     bookTitle: string;
+    bookImage: string;
     reservedAt: Date;
     dueDate: Date;
     returnedAt?: Date;

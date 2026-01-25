@@ -35,7 +35,7 @@ export class BookController {
     @ApiOperation({ summary: "Find book by id" })
     @ApiResponse({ status: 200, description: "Book found" })
     @ApiResponse({ status: 404, description: "Book not found" })
-    findOne(@Param("id") id: string) {
+    async findOne(@Param("id") id: string) {
         return this.bookService.findBookById(id);
     }
 
@@ -44,7 +44,7 @@ export class BookController {
     @ApiOperation({ summary: "Update book info" })
     @ApiResponse({ status: 200, description: "Book deactivated" })
     @ApiResponse({ status: 404, description: "Book not found" })
-    update(@Param("id") id: string, @Body() updateBookDto: UpdateBookDto) {
+    async update(@Param("id") id: string, @Body() updateBookDto: UpdateBookDto) {
         return this.bookService.update(id, updateBookDto);
     }
 

@@ -1,7 +1,6 @@
-import { IsNotEmpty, IsNumber, isString, IsString, Min } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, Min } from "class-validator";
 
 export class CreateBookDto {
-
     @IsNotEmpty()
     @IsString()
     title: string;
@@ -13,4 +12,8 @@ export class CreateBookDto {
     @IsNotEmpty()
     @Min(1)
     quantity: number;
+
+    @IsOptional()
+    @IsString()
+    imageUrl: string;
 }

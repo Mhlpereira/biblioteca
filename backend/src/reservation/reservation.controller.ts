@@ -1,42 +1,55 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ReservationService } from './reservation.service';
-import { CreateReservationDto } from './dto/create-reservation.dto';
-import { UpdateReservationDto } from './dto/update-reservation.dto';
-import { FindReservationDto } from './dto/find-reservation.dto';
-import { CurrentUser } from '../common/decorator/current-user.decorator';
-import { JwtPayload } from '../auth/types/jwt-payload.types';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, HttpCode } from "@nestjs/common";
+import { ReservationService } from "./reservation.service";
+import { CreateReservationDto } from "./dto/create-reservation.dto";
+import { UpdateReservationDto } from "./dto/update-reservation.dto";
+import { FindReservationDto } from "./dto/find-reservation.dto";
+import { CurrentUser } from "../common/decorator/current-user.decorator";
+import { JwtPayload } from "../auth/types/jwt-payload.types";
+import { PaginationDto } from "../common/dto/pagination.dto";
+import { FindReservetaionResponseDto } from "./dto/find-response-reservation.dto";
+import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
 
-@Controller('reservation')
+@Controller("reservation")
 export class ReservationController {
-  constructor(private readonly reservationService: ReservationService) {}
+    constructor(private readonly reservationService: ReservationService) {}
 
-  @Post()
-  async creat(@Body() createReservationDto: CreateReservationDto) {
-    return this.reservationService.create(createReservationDto);
-  }
+    @Post()
+    @HttpCode(201)
+    async create(@Body() createReservationDto: CreateReservationDto) {
+        return this.reservationService.create(createReservationDto);
+    }
 
-  @Get()
-  async findAllWithParameters(@Param() findReservationDto:FindReservationDto) {
-    return this.reservationService.findAll(findReservationDto);
-  }
+    @Get()
+    @HttpCode(200)
+    async findAllWithParameters(@Param() findReservationDto: FindReservationDto) {
+        return this.reservationService.findAll(findReservationDto);
+    }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.reservationService.findOne(id);
-  }
+    @Get(":id")
+    @HttpCode(200)
+    async findOne(@Param("id") id: string) {
+        return this.reservationService.findOne(id);
+    }
 
-  @Get('me')
-  async findAuthClientReservations(@CurrentUser() user: JwtPayload){
-    return this.reservationService.findAuthClientReservation(user.sub);
-  }
+    @Get("me")
+    @HttpCode(200)
+    async findAuthClientReservations(@CurrentUser() user: JwtPayload): Promise<PaginatedResponseDto<FindReservetaionResponseDto>> {
+        return this.reservationService.findAuthClientReservation(user.sub);
+    }
 
-  @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateReservationDto: UpdateReservationDto) {
-    return this.reservationService.update(id, updateReservationDto);
-  }
+    @Post("return")
+    @HttpCode(200)
+    async returnBook() {}
 
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.reservationService.remove(id);
-  }
+    @Patch(":id")
+    @HttpCode(200)
+    async update(@Param("id") id: string, @Body() updateReservationDto: UpdateReservationDto) {
+        return this.reservationService.update(id, updateReservationDto);
+    }
+
+    @Delete(":id")
+    @HttpCode(204)
+    async remove(@Param("id") id: string) {
+        return this.reservationService.remove(id);
+    }
 }

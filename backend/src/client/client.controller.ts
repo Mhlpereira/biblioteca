@@ -5,6 +5,8 @@ import { UpdatePasswordDto } from "./dto/update-password.dto";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "../auth/types/jwt-payload.types";
+import { DenyRoles } from "../auth/decorators/roles.decorator";
+import { Role } from "../auth/enum/role.enum";
 
 @Controller("client")
 export class ClientController {
@@ -49,6 +51,7 @@ export class ClientController {
 
     @Get("findAll")
     @HttpCode(200)
+    @DenyRoles(Role.USER)
     async findAll(){
         return this.clientService.findAll();
     }
