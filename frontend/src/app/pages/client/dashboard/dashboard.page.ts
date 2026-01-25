@@ -35,6 +35,21 @@ export class DashboardPage implements OnInit {
         });
     }
 
+    onReturnBook(reservationId: string) {
+        if (!confirm("Confirmar a devolução deste livro?")) return;
+
+        this.isLoading = true;
+        this.reservationService.returnBook(reservationId).subscribe({
+            next: () => {
+                this.fetchReservations();
+            },
+            error: err => {
+                this.isLoading = false;
+                alert("Erro ao devolver livro. Tente novamente.");
+            },
+        });
+    }
+
     isOverdue(reservation: Reservation): boolean {
         if (reservation.status === "RETURNED") return false;
         return new Date(reservation.dueDate) < new Date();

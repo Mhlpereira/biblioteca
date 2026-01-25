@@ -14,4 +14,8 @@ export class ReservationService {
   getMyReservations(): Observable<Reservation[]> {
     return this.http.get<Reservation[]>(`${this.API_URL}/reservation/me`, { withCredentials: true });
   }
+
+  returnBook(reservationId: string): Observable<void> {
+    return this.http.post<void>(`${this.API_URL}/reservation/return`, { reservationId }, { withCredentials: true });
+}
 }
