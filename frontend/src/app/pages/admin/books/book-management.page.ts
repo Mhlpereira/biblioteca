@@ -2,11 +2,13 @@ import { Component, inject, OnInit, signal } from "@angular/core";
 import { PaginationComponent } from "../../../components/ui/pagination/pagination.component";
 import { CommonModule, CurrencyPipe, DatePipe } from "@angular/common";
 import { AdminService } from "../../../services/admin.service";
+import { CreateBookModalComponent } from "../../../components/admin/create-book-modal/create-book-modal.component";
+import { CreateBook } from "../../../core/model/book.models";
 
 @Component({
     selector: "app-book-management",
     standalone: true,
-    imports: [CommonModule, PaginationComponent, DatePipe, CurrencyPipe],
+    imports: [CommonModule, PaginationComponent, DatePipe, CurrencyPipe, CreateBookModalComponent],
     templateUrl: "./book-management.page.html",
 })
 export class BookManagementPage implements OnInit {
@@ -15,10 +17,11 @@ export class BookManagementPage implements OnInit {
     activeTab = signal<"inventory" | "overdue">("inventory");
     books = signal<any[]>([]);
     overdueReservations = signal<any[]>([]);
+    showCreateModal = signal(false);
 
     isLoading = signal(false);
     meta = signal({ page: 1, lastPage: 1, total: 0 });
-    searchTerm = signal<string>('');
+    searchTerm = signal<string>("");
 
     ngOnInit() {
         this.loadData();
@@ -35,19 +38,44 @@ export class BookManagementPage implements OnInit {
             this.adminService.getBooks(page, 10, this.searchTerm()).subscribe({
                 next: res => this.handleResponse(res),
                 error: err => {
-                    console.error('Erro ao carregar livros:', err);
+                    console.error("Erro ao carregar livros:", err);
                     this.isLoading.set(false);
-                }
+                },
             });
         } else {
             this.adminService.getReservations(true, page).subscribe({
                 next: res => this.handleResponse(res),
                 error: err => {
-                    console.error('Erro ao carregar reservas:', err);
+                    console.error("Erro ao carregar reservas:", err);
                     this.isLoading.set(false);
-                }
+                },
             });
         }
+    }
+
+    openCreateModal() {
+        this.showCreateModal.set(true);
+    }
+    closeCreateModal() {
+        this.showCreateModal.set(false);
+    }
+
+    handleCreateBook(bookData: CreateBook) {
+        this.isLoading.set(true); 
+
+        this.adminService.createBook(bookData).subscribe({
+            next: () => {
+                alert("Livro criado com sucesso!");
+                this.closeCreateModal(); 
+                this.loadData(); 
+                this.isLoading.set(false);
+            },
+            error: err => {
+                console.error("Erro ao criar livro:", err);
+                alert("Erro ao criar livro. Verifique o console.");
+                this.isLoading.set(false);
+            },
+        });
     }
 
     private handleResponse(res: any) {

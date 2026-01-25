@@ -14,7 +14,7 @@ import { BookListResponseDto } from "./dto/list-book-output.dto";
 export class BookController {
     constructor(private readonly bookService: BookService) {}
 
-    @Post("create")
+    @Post()
     @DenyRoles(Role.USER)
     @HttpCode(201)
     @ApiOperation({ summary: "Create book" })

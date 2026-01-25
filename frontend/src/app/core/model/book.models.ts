@@ -13,3 +13,12 @@ export interface Book {
     hasAvailable: boolean;
     imageUrl: string;
 }
+
+export interface CreateBook{
+
+    title: string;
+    author: string;
+    quantity: number;
+    imageUrl: string;
+}
+

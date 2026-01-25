@@ -5,7 +5,7 @@ import { User } from "../core/model/user.model";
 import { API_BASE_URL } from "../core/constants/api.constants";
 import { FindClientParams } from "../core/model/client.model";
 import { PaginatedResult } from "../core/model/pagination.model";
-import { Book } from "../core/model/book.models";
+import { Book, CreateBook } from "../core/model/book.models";
 import { Reservation } from "../core/model/reservation.model";
 
 @Injectable({
@@ -47,6 +47,12 @@ export class AdminService {
         });
     }
 
+    createBook(book: CreateBook): Observable<void> {
+        return this.http.post<void>(`${this.API_URL}/books`, book, {
+            withCredentials: true,
+        });
+
+    }
     deactivateBook(id: string): Observable<void> {
         return this.http.patch<void>(`${this.API_URL}/books/${id}/deactivate`, {}, { withCredentials: true });
     }
