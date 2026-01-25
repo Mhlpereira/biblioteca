@@ -5,7 +5,7 @@ import { Role } from "../../auth/enum/role.enum";
 @Entity()
 export class Client{
 
-    @PrimaryColumn({ type: 'char', length: 26 })
+    @PrimaryColumn({ type: 'varchar', length: 26 })
     id: string;
 
     @Column({unique:true, length: 11})
@@ -23,7 +23,7 @@ export class Client{
     @Column({default: true})
     active: boolean;
 
-    @Column({default: Role.USER})
+    @Column({type: 'varchar', default: Role.USER})
     role: Role;
 
     @CreateDateColumn()

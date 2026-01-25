@@ -40,7 +40,7 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 
                 if (isTest) {
                     return {
-                        type: "sqlite",
+                        type: "better-sqlite3",
                         database: ":memory:",
                         entities: ["src/**/*.entity.ts"],
                         synchronize: true,

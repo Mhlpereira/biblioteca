@@ -1,50 +1,59 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ClientService } from "../client.service";
+import { Repository } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Client } from "../entities/client.entity";
 import { CryptoService } from "../../common/crypto/crypto.service";
-import { Repository } from "typeorm";
-import { BadRequestException } from "@nestjs/common";
-import { ulid } from "ulid";
-
-jest.mock("cpf-cnpj-validator", () => ({
-    cpf: {
-        isValid: jest.fn(),
-    },
-}));
-
-jest.mock("ulid", () => ({
-    ulid: jest.fn(),
-}));
+import { ReservationService } from "../../reservation/reservation.service";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { Role } from "../../auth/enum/role.enum";
 
 describe("ClientService", () => {
     let service: ClientService;
-    let clientRepository: jest.Mocked<Repository<Client>>;
+    let repo: Repository<Client>;
+    let cryptoService: CryptoService;
+    let reservationService: ReservationService;
+
+    const mockRepository = {
+        create: jest.fn(),
+        save: jest.fn(),
+        findOneBy: jest.fn(),
+        createQueryBuilder: jest.fn(),
+    };
+
+    const mockCryptoService = {
+        compare: jest.fn(),
+        hash: jest.fn(),
+    };
+
+    const mockReservationService = {
+        findAuthClientReservation: jest.fn(),
+        remove: jest.fn(),
+    };
 
     beforeEach(async () => {
-        clientRepository = {
-            create: jest.fn(),
-            save: jest.fn(),
-            findOneBy: jest.fn(),
-        } as any;
-
-        (ulid as jest.MockedFunction<typeof ulid>).mockReset();
-
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 ClientService,
                 {
                     provide: getRepositoryToken(Client),
-                    useValue: clientRepository,
+                    useValue: mockRepository,
                 },
                 {
                     provide: CryptoService,
-                    useValue: { hash: jest.fn() },
+                    useValue: mockCryptoService,
+                },
+                {
+                    provide: ReservationService,
+                    useValue: mockReservationService,
                 },
             ],
         }).compile();
 
-        service = module.get<ClientService>(ClientService);
+        service = module.get(ClientService);
+        repo = module.get(getRepositoryToken(Client));
+        cryptoService = module.get(CryptoService);
+        reservationService = module.get(ReservationService);
     });
 
     afterEach(() => {
@@ -52,73 +61,146 @@ describe("ClientService", () => {
     });
 
     describe("createClient", () => {
-        const createClientDto = {
-            cpf: "12345678901",
-            name: "João",
-            lastName: "Silva",
-            password: "password123",
-        };
-
         it("should create a client successfully", async () => {
-            const { cpf } = require("cpf-cnpj-validator");
-            cpf.isValid.mockReturnValue(true);
+            mockRepository.findOneBy.mockResolvedValue(null);
+            mockRepository.create.mockReturnValue({ cpf: "12345678909" });
+            mockRepository.save.mockResolvedValue({ id: "1" });
 
-            clientRepository.findOneBy.mockResolvedValue(null);
+            const result = await service.createClient({
+                cpf: "12345678909",
+                name: "Mário",
+                lastName: "Henrique",
+                password: "123",
+                active: true,
+                role: Role.ADMIN
+            });
 
-            const mockUlid = "01HXXXXXXXXXXXXXXXXXXXXX";
-            (ulid as jest.MockedFunction<typeof ulid>).mockReturnValue(mockUlid);
+            expect(repo.save).toHaveBeenCalled();
+            expect(result).toHaveProperty("id");
+        });
 
-            const now = new Date();
-            const mockClient = {
-                id: mockUlid,
-                ...createClientDto,
-                createdAt: now,
-                updatedAt: now,
-            };
-            clientRepository.create.mockReturnValue(mockClient);
-            clientRepository.save.mockResolvedValue(mockClient);
+        it("should throw if CPF is invalid", async () => {
+            await expect(
+                service.createClient({
+                    cpf: "111",
+                    name: "Teste",
+                    lastName: "Teste",
+                    password: "123",
+                    active: true,
+                    role: Role.ADMIN
+                })
+            ).rejects.toThrow(BadRequestException);
+        });
 
-            const result = await service.createClient(createClientDto);
+        it("should throw if CPF already exists", async () => {
+            mockRepository.findOneBy.mockResolvedValue({ id: "1" });
 
-            expect(cpf.isValid).toHaveBeenCalledWith(createClientDto.cpf);
-            expect(clientRepository.findOneBy).toHaveBeenCalledWith({ cpf: createClientDto.cpf });
-            expect(clientRepository.create).toHaveBeenCalledWith(
-                expect.objectContaining({ id: mockUlid })
+            await expect(
+                service.createClient({
+                    cpf: "12345678909",
+                    name: "Teste",
+                    lastName: "Teste",
+                    password: "123",
+                    active: true,
+                    role: Role.ADMIN
+                })
+            ).rejects.toThrow("CPF já cadastrado");
+        });
+    });
+
+    describe("findByIdorThrow", () => {
+        it("should return client", async () => {
+            mockRepository.findOneBy.mockResolvedValue({ id: "1" });
+
+            const result = await service.findByIdorThrow("1");
+
+            expect(result).toEqual({ id: "1" });
+        });
+
+        it("should throw if not found", async () => {
+            mockRepository.findOneBy.mockResolvedValue(null);
+
+            await expect(service.findByIdorThrow("1")).rejects.toThrow(
+                NotFoundException
             );
-            expect(result).toBe(mockClient);
+        });
+    });
+
+
+    describe("update", () => {
+        it("should update client data", async () => {
+            const client = { id: "1", name: "Old" };
+
+            jest.spyOn(service, "findByIdorThrow").mockResolvedValue(client as any);
+            mockRepository.save.mockResolvedValue({ ...client, name: "New" });
+
+            const result = await service.update("1", { name: "New" });
+
+            expect(result.name).toBe("New");
+        });
+    });
+
+
+    describe("changePassword", () => {
+        it("should change password successfully", async () => {
+            const client = { id: "1", password: "hashed" };
+
+            jest.spyOn(service, "findByIdorThrow").mockResolvedValue(client as any);
+            mockCryptoService.compare.mockResolvedValue(true);
+            mockCryptoService.hash.mockResolvedValue("newHash");
+
+            const result = await service.changePassword("1", {
+                currentPassword: "old",
+                newPassword: "new",
+                confirmPassword: "new",
+            });
+
+            expect(result.message).toBeDefined();
+            expect(repo.save).toHaveBeenCalled();
         });
 
-        it("should throw BadRequestException for invalid CPF", async () => {
-            const { cpf } = require("cpf-cnpj-validator");
-            cpf.isValid.mockReturnValue(false);
-
-            await expect(service.createClient(createClientDto))
-                .rejects.toThrow(BadRequestException);
+        it("should throw if passwords do not match", async () => {
+            await expect(
+                service.changePassword("1", {
+                    currentPassword: "old",
+                    newPassword: "a",
+                    confirmPassword: "b",
+                })
+            ).rejects.toThrow("As senhas não conferem");
         });
 
-        it("should not create client if CPF already exists", async () => {
-            const { cpf } = require("cpf-cnpj-validator");
-            cpf.isValid.mockReturnValue(true);
+        it("should throw if current password is invalid", async () => {
+            jest.spyOn(service, "findByIdorThrow").mockResolvedValue({
+                password: "hashed",
+            } as any);
 
-            clientRepository.findOneBy.mockResolvedValue({ id: "1", cpf: createClientDto.cpf } as any);
+            mockCryptoService.compare.mockResolvedValue(false);
 
-            await expect(service.createClient(createClientDto))
-                .rejects.toThrow(BadRequestException);
+            await expect(
+                service.changePassword("1", {
+                    currentPassword: "wrong",
+                    newPassword: "new",
+                    confirmPassword: "new",
+                })
+            ).rejects.toThrow("Senha atual inválida");
         });
+    });
 
-        it("should generate ulid for client id", async () => {
-            const { cpf } = require("cpf-cnpj-validator");
-            cpf.isValid.mockReturnValue(true);
-            clientRepository.findOneBy.mockResolvedValue(null);
 
-            const mockUlid = "01HULIDTEST";
-            (ulid as jest.MockedFunction<typeof ulid>).mockReturnValue(mockUlid);
+    describe("deleteClient", () => {
+        it("should deactivate client and remove reservations", async () => {
+            const client = { id: "1", active: true };
 
-            await service.createClient(createClientDto);
+            jest.spyOn(service, "findByIdorThrow").mockResolvedValue(client as any);
 
-            expect(ulid).toHaveBeenCalled();
-            expect(clientRepository.create)
-                .toHaveBeenCalledWith(expect.objectContaining({ id: mockUlid }));
+            mockReservationService.findAuthClientReservation.mockResolvedValue({
+                data: [{ id: "r1" }, { id: "r2" }],
+            });
+
+            await service.deleteClient("1");
+
+            expect(reservationService.remove).toHaveBeenCalledTimes(2);
+            expect(client.active).toBe(false);
         });
     });
 });

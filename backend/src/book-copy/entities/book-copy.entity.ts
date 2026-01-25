@@ -5,14 +5,14 @@ import { BookCopyStatus } from "../enum/book-status.enum";
 @Index(["book" , "status"])
 @Entity()
 export class BookCopy {
-    @PrimaryColumn({ type: "char", length: 26 })
+    @PrimaryColumn({ type: "varchar", length: 26 })
     id: string;
 
     @ManyToOne(() => Book)
     book: Book;
 
     @Column({
-        type: "enum",
+        type: "varchar",
         enum: BookCopyStatus,
         default: BookCopyStatus.AVAILABLE,
     })

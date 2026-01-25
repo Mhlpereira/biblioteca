@@ -5,7 +5,7 @@ import { ReservationStatus } from "../enum/reservation-status.enum";
 
 @Entity()
 export class Reservation {
-    @PrimaryColumn({ type: "char", length: 26 })
+    @PrimaryColumn({ type: "varchar", length: 26 })
     id: string;
 
     @ManyToOne(() => Client)
@@ -24,7 +24,7 @@ export class Reservation {
     returnedAt?: Date;
 
     @Column({
-        type: "enum",
+        type: "varchar",
         enum: ReservationStatus,
         default: ReservationStatus.ACTIVE,
     })

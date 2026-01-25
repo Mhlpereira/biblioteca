@@ -1,7 +1,8 @@
 import { IsBoolean, IsDate, IsEnum, IsOptional, IsString } from "class-validator";
 import { ReservationStatus } from "../enum/reservation-status.enum";
+import { PaginationDto } from "../../common/dto/pagination.dto";
 
-export class FindReservationDto {
+export class FindReservationDto extends PaginationDto{
     @IsOptional()
     @IsString()
     clientId?: string;
