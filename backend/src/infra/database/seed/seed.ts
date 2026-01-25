@@ -7,23 +7,25 @@ import { BookCopy } from "../../../book-copy/entities/book-copy.entity";
 import { BookCopyStatus } from "../../../book-copy/enum/book-status.enum";
 import { Book } from "../../../book/entities/book.entity";
 import { Client } from "../../../client/entities/client.entity";
-import { REAL_BOOKS } from './data';
+import { REAL_BOOKS } from "./data";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+import { Reservation } from "../../../reservation/entities/reservation.entity";
 
-dotenv.config(); 
-
+dotenv.config();
 
 async function seed() {
     console.log("🌱 Iniciando Seed...");
 
     const dataSource = new DataSource({
-        type: "postgres", 
-        host: process.env.DB_HOST || "localhost",
-        port: Number(process.env.DB_PORT) || 5432,
-        username: process.env.DB_USERNAME || "postgres",
-        password: process.env.DB_PASSWORD || "postgres",
-        database: process.env.DB_NAME || "library_db",
-        entities: [Client, Book, BookCopy], 
-        synchronize: false, 
+        type: "mysql", 
+        host: process.env.DATABASE_HOST || "localhost",
+        port: Number(process.env.DATABASE_PORT) || 3306, 
+        username: process.env.DATABASE_USER|| "root", 
+        password: process.env.DATABASE_PASSWORD || "sua_senha",
+        database: process.env.DATABASE_NAME || "library_db",
+        entities: [Client, Book, BookCopy, Reservation],
+        synchronize: false,
+        namingStrategy: new SnakeNamingStrategy(),
     });
 
     await dataSource.initialize();
@@ -33,15 +35,15 @@ async function seed() {
     const bookRepo = dataSource.getRepository(Book);
     const copyRepo = dataSource.getRepository(BookCopy);
 
-    const passwordHash = await bcrypt.hash("123456", 10);
+    const passwordHash = await bcrypt.hash("Senha#123", 10);
 
     const admin = clientRepo.create({
         id: ulid(),
         cpf: "00000000000",
-        name: "Admin",
-        lastName: "System",
+        name: "Mario",
+        lastName: "Henrique",
         password: passwordHash,
-        role: Role.ADMIN, 
+        role: Role.ADMIN,
         active: true,
     });
 
@@ -80,7 +82,7 @@ async function seed() {
                     copyRepo.create({
                         id: ulid(),
                         book: book,
-                        status: BookCopyStatus.AVAILABLE, 
+                        status: BookCopyStatus.AVAILABLE,
                     })
                 );
             }
