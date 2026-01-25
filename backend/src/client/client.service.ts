@@ -3,7 +3,7 @@ import { cpf } from "cpf-cnpj-validator";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Client } from "./entities/client.entity";
 import { Repository } from "typeorm";
-import { CreateClientDto } from "./interface/create-client.interface";
+import { CreateClient } from "./interface/create-client.interface";
 import { ulid } from "ulid";
 import { UpdateClient } from "./interface/update-client.interface";
 import { CryptoService } from "../common/crypto/crypto.service";
@@ -19,13 +19,13 @@ export class ClientService {
         private readonly reservationService: ReservationService
     ) {}
 
-    async createClient(createClientDto: CreateClientDto) {
-        this.validateCpf(createClientDto.cpf);
-        await this.verifyUniqueCpf(createClientDto.cpf);
+    async createClient(createClient: CreateClient) {
+        this.validateCpf(createClient.cpf);
+        await this.verifyUniqueCpf(createClient.cpf);
 
         const client = this.clientRepository.create({
             id: ulid(),
-            ...createClientDto,
+            ...createClient,
         });
 
         return this.clientRepository.save(client);
@@ -74,6 +74,10 @@ export class ClientService {
         await this.clientRepository.save(client);
 
         return {message: "Senha alterada com sucesso!"};
+    }
+
+    async findAll(){
+
     }
 
     async deleteClient(id:string){

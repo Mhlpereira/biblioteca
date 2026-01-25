@@ -9,7 +9,7 @@ import { LoggerModule } from "nestjs-pino";
 import { CryptoModule } from "./common/crypto/crypto.module";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
-import { JwtAuthGuard } from "./auth/jwt/jwt.auth-guard";
+import { JwtAuthGuard } from "./auth/guard/jwt.guard";
 import { BookCopyModule } from "./book-copy/book-copy.module";
 import { dataSourceOptions } from "./infra/database/typeorm/data-source";
 import { TypeOrmModule } from "@nestjs/typeorm";

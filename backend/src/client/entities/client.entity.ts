@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Role } from "../../auth/enum/role.enum";
 
 
 @Entity()
@@ -21,6 +22,9 @@ export class Client{
 
     @Column({default: true})
     active: boolean;
+
+    @Column({default: Role.USER})
+    role: Role;
 
     @CreateDateColumn()
     createdAt: Date;

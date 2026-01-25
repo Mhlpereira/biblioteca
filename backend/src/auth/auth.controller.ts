@@ -5,7 +5,7 @@ import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { RegisterOutputDto } from "./dto/register-output.dto";
 import { Public } from "./decorators/public.decorator";
 import { LoginDto } from "./dto/login.dto";
-import { JwtAuthGuard } from "./jwt/jwt.auth-guard";
+import { JwtAuthGuard } from "./guard/jwt.guard";
 import { Response } from "express";
 import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "./types/jwt-payload.types";

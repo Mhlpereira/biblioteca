@@ -46,4 +46,10 @@ export class ClientController {
     async remove(@CurrentUser() user: JwtPayload) {
         return this.clientService.deleteClient(user.sub);
     }
+
+    @Get("findAll")
+    @HttpCode(200)
+    async findAll(){
+        return this.clientService.findAll();
+    }
 }

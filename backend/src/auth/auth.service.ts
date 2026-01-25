@@ -8,6 +8,8 @@ import { JwtPayload } from "./types/jwt-payload.types";
 import { maskCpf } from "../common/helper/cpf-mask.helper";
 import { RegisterResult } from "./interface/registerResult.interface";
 import { LoginResult } from "./interface/loginResult.interface";
+import { Role } from "./enum/role.enum";
+import { Register } from "./interface/register.interface";
 
 @Injectable()
 export class AuthService {
@@ -17,18 +19,20 @@ export class AuthService {
         private readonly jwtService: JwtService
     ) {}
 
-    async createClient(registerDto: RegisterDto): Promise<RegisterResult> {
-        if (registerDto.password !== registerDto.confirmPassword) {
+    async createClient(register: Register): Promise<RegisterResult> {
+        if (register.password !== register.confirmPassword) {
             throw new BadRequestException("As senhas não coincidem");
         }
 
-        const hashedPassword = await this.cryptoService.hash(registerDto.password);
+        const hashedPassword = await this.cryptoService.hash(register.password);
 
         const client = await this.clientService.createClient({
-            cpf: registerDto.cpf,
-            name: registerDto.name,
-            lastName: registerDto.lastName,
+            cpf: register.cpf,
+            name: register.name,
+            lastName: register.lastName,
             password: hashedPassword,
+            active:true,
+            role: Role.USER,
         });
 
         return {
@@ -38,6 +42,7 @@ export class AuthService {
             lastName: client.lastName,
             createdAt: client.createdAt,
             updatedAt: client.updatedAt,
+            role: client.role,
         };
     }
 
@@ -48,6 +53,8 @@ export class AuthService {
             sub: client.id,
             cpf: client.cpf,
             name: client.name,
+            role: client.role,
+            active: client.active
         };
 
         return {
@@ -56,6 +63,8 @@ export class AuthService {
                 id: client.id,
                 name: client.name,
                 cpf: maskCpf(client.cpf),
+                role: client.role,
+                active: client.active
             },
         };
     }
@@ -81,6 +90,8 @@ export class AuthService {
             id: user.sub,
             cpf: user.cpf,
             name: user.name,
+            role: user.role,
+            active: user.active
         };
     }
 }
