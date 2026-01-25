@@ -11,7 +11,7 @@ export const routes: Routes = [
     { path: "", component: LoginPage },
     { path: "registro", component: RegisterPage },
     { path: "catalogo", component: CatalogPage },
-    { path: "reserva", component: DashboardPage },
+    { path: "home", component: DashboardPage },
 
     { path: "", component: SidebarComponent, canActivate: [authGuard], children: [] },
 

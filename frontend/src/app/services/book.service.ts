@@ -2,13 +2,14 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { FindBooksQuery, Book } from "../core/model/book.models";
+import { API_BASE_URL } from "../core/constants/api.constants";
 
 @Injectable({
     providedIn: "root",
 })
 export class BookService {
     private http = inject(HttpClient);
-    private readonly API_URL = "http://localhost:3000/books";
+    private readonly API_URL = `${API_BASE_URL}/books`;
 
     getBooks(query?: FindBooksQuery): Observable<Book[]> {
         let params = new HttpParams();

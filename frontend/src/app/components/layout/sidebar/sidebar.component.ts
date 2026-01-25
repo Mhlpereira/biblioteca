@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
+import { UserStore } from '../../../core/stores/user.store';
 
 @Component({
   selector: 'app-sidebar',
@@ -11,6 +12,7 @@ import { AuthService } from '../../services/auth.service';
 export class SidebarComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  userStore = inject(UserStore);
 
   logout() {
     this.authService.logout().subscribe({

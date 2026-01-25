@@ -4,6 +4,7 @@ import { LoginRequest, RegisterRequest } from "../core/model/auth.models";
 import { UserStore } from "../core/stores/user.store";
 import { User } from "../core/model/user.model";
 import { catchError, finalize, Observable, tap } from "rxjs";
+import { API_BASE_URL } from "../core/constants/api.constants";
 
 @Injectable({
     providedIn: "root",
@@ -11,7 +12,7 @@ import { catchError, finalize, Observable, tap } from "rxjs";
 export class AuthService {
     private http = inject(HttpClient);
     private userStore = inject(UserStore);
-    private readonly API_URL = "http://localhost:3000/api";
+    private readonly API_URL = API_BASE_URL;
 
     login(credentials: LoginRequest) {
         return this.http.post<User>(`${this.API_URL}/auth/login`, credentials, { withCredentials: true }).pipe(
