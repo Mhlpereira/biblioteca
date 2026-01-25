@@ -18,6 +18,7 @@ export class BookManagementPage implements OnInit {
 
     isLoading = signal(false);
     meta = signal({ page: 1, lastPage: 1, total: 0 });
+    searchTerm = signal<string>('');
 
     ngOnInit() {
         this.loadData();
@@ -31,9 +32,21 @@ export class BookManagementPage implements OnInit {
     loadData(page: number = 1) {
         this.isLoading.set(true);
         if (this.activeTab() === "inventory") {
-            this.adminService.getBooks(page).subscribe(res => this.handleResponse(res));
+            this.adminService.getBooks(page, 10, this.searchTerm()).subscribe({
+                next: res => this.handleResponse(res),
+                error: err => {
+                    console.error('Erro ao carregar livros:', err);
+                    this.isLoading.set(false);
+                }
+            });
         } else {
-            this.adminService.getReservations(true, page).subscribe(res => this.handleResponse(res));
+            this.adminService.getReservations(true, page).subscribe({
+                next: res => this.handleResponse(res),
+                error: err => {
+                    console.error('Erro ao carregar reservas:', err);
+                    this.isLoading.set(false);
+                }
+            });
         }
     }
 
@@ -49,5 +62,10 @@ export class BookManagementPage implements OnInit {
         if (confirm("Desativar este livro impedirá novas cópias e reservas. Continuar?")) {
             this.adminService.deactivateBook(id).subscribe(() => this.loadData());
         }
+    }
+
+    onSearchChange(term: string) {
+        this.searchTerm.set(term);
+        this.loadData(1);
     }
 }

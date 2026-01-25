@@ -8,6 +8,8 @@ export interface Book {
     id: string;
     title: string;
     author: string;
-    coverUrl?: string;
-    isAvailable: boolean;
+    totalCopies: number;
+    availableCopies: number;
+    hasAvailable: boolean;
+    imageUrl: string;
 }

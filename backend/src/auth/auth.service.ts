@@ -86,7 +86,13 @@ export class AuthService {
     }
 
     me(user: JwtPayload) {
+
+        if(!user){
+            throw new Error("Usário não encontrado no contexto")
+        }
+
         return {
+            sub: user.sub,
             id: user.sub,
             cpf: user.cpf,
             name: user.name,

@@ -65,7 +65,7 @@ export class ReservationService {
                 "reservation.id AS id",
                 "client.name AS clientName",
                 "book.title AS bookTitle",
-                "book.imageUl AS bookImage",
+                "book.imageUrl AS bookImage",
                 "book.author AS author",
                 "reservation.reservedAt AS reservedAt",
                 "reservation.dueDate AS dueDate",

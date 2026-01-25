@@ -17,7 +17,7 @@ export class Client{
     @Column()
     lastName: string;
 
-    @Column({select: false})
+    @Column()
     password: string;
 
     @Column({default: true})

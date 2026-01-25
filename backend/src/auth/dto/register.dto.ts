@@ -19,10 +19,6 @@ export class RegisterDto {
 
     @ApiProperty({ example: "Senha@123" })
     @IsString()
-    @MinLength(8)
-    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-        message: "Senha deve conter maiúscula, minúscula, número e caractere especial",
-    })
     password: string;
 
     @ApiProperty({ example: "Senha@123" })

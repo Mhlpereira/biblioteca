@@ -12,11 +12,19 @@ import { JwtPayload } from "./types/jwt-payload.types";
 import { LoginOutputDto } from "./dto/login-output.dto";
 
 @Controller("auth")
-@Public()
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
+    @Get("me")
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: "Get authenticated user" })
+    @ApiResponse({ status: 200, description: "Authenticated user" })
+    me(@CurrentUser() user: JwtPayload) {
+        return this.authService.me(user);
+    }
+
     @Post("register")
+    @Public()
     @HttpCode(201)
     @ApiOperation({ summary: "Create client" })
     @ApiResponse({ status: 201, description: "Created", type: RegisterOutputDto })
@@ -25,10 +33,11 @@ export class AuthController {
     }
 
     @Post("login")
+    @Public()
     @HttpCode(200)
     @ApiOperation({ summary: "Log in system" })
     @ApiResponse({ status: 200, description: "Logged" })
-    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<LoginOutputDto>{
+    async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<LoginOutputDto> {
         const logged = await this.authService.login(loginDto);
 
         res.cookie("access_token", logged.accessToken, {
@@ -39,14 +48,6 @@ export class AuthController {
         });
 
         return logged.user;
-    }
-
-    @UseGuards(JwtAuthGuard)
-    @Get("me")
-    @ApiOperation({ summary: "Get authenticated user" })
-    @ApiResponse({ status: 200, description: "Authenticated user" })
-    me(@CurrentUser() user: JwtPayload) {
-        return this.authService.me(user);
     }
 
     @UseGuards(JwtAuthGuard)

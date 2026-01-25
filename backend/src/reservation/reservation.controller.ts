@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, HttpCode } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, HttpCode, UseGuards } from "@nestjs/common";
 import { ReservationService } from "./reservation.service";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
@@ -8,10 +8,20 @@ import { JwtPayload } from "../auth/types/jwt-payload.types";
 import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
 import { FindReservationResponseDto } from "./dto/find-response-reservation.dto";
 import { ReturnReservetionDto } from "./dto/return-reservation.dto";
+import { JwtAuthGuard } from "../auth/guard/jwt.guard";
 
 @Controller("reservation")
 export class ReservationController {
     constructor(private readonly reservationService: ReservationService) {}
+
+    @Get("me")
+    @HttpCode(200)
+    @UseGuards(JwtAuthGuard)
+    async findAuthClientReservations(
+        @CurrentUser() user: JwtPayload
+    ): Promise<PaginatedResponseDto<FindReservationResponseDto>> {
+        return this.reservationService.findAuthClientReservation(user.sub);
+    }
 
     @Post()
     @HttpCode(201)
@@ -21,7 +31,9 @@ export class ReservationController {
 
     @Get()
     @HttpCode(200)
-    async findAll(@Param() findReservationDto: FindReservationDto): Promise<PaginatedResponseDto<FindReservationResponseDto>>{
+    async findAll(
+        @Param() findReservationDto: FindReservationDto
+    ): Promise<PaginatedResponseDto<FindReservationResponseDto>> {
         return this.reservationService.findAll(findReservationDto);
     }
 
@@ -29,12 +41,6 @@ export class ReservationController {
     @HttpCode(200)
     async findOne(@Param("id") id: string) {
         return this.reservationService.findOne(id);
-    }
-
-    @Get("me")
-    @HttpCode(200)
-    async findAuthClientReservations(@CurrentUser() user: JwtPayload): Promise<PaginatedResponseDto<FindReservationResponseDto>> {
-        return this.reservationService.findAuthClientReservation(user.sub);
     }
 
     @Post("return")

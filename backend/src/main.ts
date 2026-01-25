@@ -4,10 +4,12 @@ import { Logger } from "nestjs-pino";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AllExceptionsFilter } from "./common/filter/http-exception.filter";
 import { ValidationPipe } from "@nestjs/common";
+import cookieParser from "cookie-parser";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
+    app.use(cookieParser());
     app.setGlobalPrefix("api");
 
     app.useLogger(app.get(Logger));

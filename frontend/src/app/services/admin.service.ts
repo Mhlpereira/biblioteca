@@ -25,14 +25,15 @@ export class AdminService {
             }
         });
 
-        return this.http.get<PaginatedResult<User>>(`${this.API_URL}/clients/findAll`, {
+        return this.http.get<PaginatedResult<User>>(`${this.API_URL}/clients`, {
             params,
             withCredentials: true,
         });
     }
 
-    getBooks(page: number = 1, limit: number = 10): Observable<PaginatedResult<Book>> {
-        const params = new HttpParams().set("page", page).set("limit", limit);
+    getBooks(page: number = 1, limit: number = 10, search?: string): Observable<PaginatedResult<Book>> {
+        let params = new HttpParams().set("page", page).set("limit", limit);
+        if (search) params = params.set("search", search);
         return this.http.get<PaginatedResult<Book>>(`${this.API_URL}/books`, { params, withCredentials: true });
     }
 

@@ -7,6 +7,8 @@ import { BookCreateOutput } from "./dto/book-create-output.dto";
 import { FindBooksQueryDto } from "./dto/find-book-query.dto";
 import { DenyRoles } from "../auth/decorators/roles.decorator";
 import { Role } from "../auth/enum/role.enum";
+import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
+import { BookListResponseDto } from "./dto/list-book-output.dto";
 
 @Controller("books")
 export class BookController {
@@ -28,7 +30,7 @@ export class BookController {
     @ApiOperation({ summary: "Search books" })
     @ApiResponse({ status: 200, description: "List of books" })
     @ApiResponse({ status: 404, description: "No books are found" })
-    async findAll(@Query() query: FindBooksQueryDto) {
+    async findAll(@Query() query: FindBooksQueryDto):Promise<PaginatedResponseDto<BookListResponseDto>> {
         return this.bookService.findAll(query);
     }
 

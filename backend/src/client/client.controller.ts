@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, Query } from "@nestjs/common";
 import { UpdateClientDto } from "./dto/update-client.dto";
 import { ClientService } from "./client.service";
 import { UpdatePasswordDto } from "./dto/update-password.dto";
@@ -8,19 +8,14 @@ import { JwtPayload } from "../auth/types/jwt-payload.types";
 import { DenyRoles } from "../auth/decorators/roles.decorator";
 import { Role } from "../auth/enum/role.enum";
 import { FindClientDto } from "./dto/find-client.dto";
+import { FindClientResponseDto } from "./dto/find-client-response.dto";
+import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
 
-@Controller("client")
+@Controller("clients")
 export class ClientController {
     constructor(private readonly clientService: ClientService) {}
 
-    @Get(":id")
-    @ApiOperation({ summary: "Get client by id" })
-    @ApiResponse({ status: 200, description: "Client found" })
-    @ApiResponse({ status: 404, description: "Client not found" })
-    async getById(@Param("id") id: string) {
-        return this.clientService.findByIdorThrow(id);
-    }
-
+    
     @Patch("me")
     @HttpCode(200)
     @ApiOperation({ summary: "Update authenticated client profile" })
@@ -30,7 +25,7 @@ export class ClientController {
     async update(@CurrentUser() user: JwtPayload, @Body() updateClientDto: UpdateClientDto) {
         return this.clientService.update(user.sub, updateClientDto);
     }
-
+    
     @Patch("me/password")
     @HttpCode(204)
     @ApiOperation({ summary: "Change authenticated client password" })
@@ -40,7 +35,7 @@ export class ClientController {
     async changePassword(@CurrentUser() user: JwtPayload, @Body() updatePasswordDto: UpdatePasswordDto) {
         return this.clientService.changePassword(user.sub, updatePasswordDto);
     }
-
+    
     @Delete("me")
     @HttpCode(204)
     @ApiOperation({ summary: "Delete authenticated client account" })
@@ -49,11 +44,19 @@ export class ClientController {
     async remove(@CurrentUser() user: JwtPayload) {
         return this.clientService.deleteClient(user.sub);
     }
+    
+    @Get(":id")
+    @ApiOperation({ summary: "Get client by id" })
+    @ApiResponse({ status: 200, description: "Client found" })
+    @ApiResponse({ status: 404, description: "Client not found" })
+    async getById(@Param("id") id: string) {
+        return this.clientService.findByIdorThrow(id);
+    }
 
-    @Get("findAll")
+    @Get()
     @HttpCode(200)
     @DenyRoles(Role.USER)
-    async findAll(findClintDto: FindClientDto){
+    async findAll(@Query() findClintDto: FindClientDto): Promise<PaginatedResponseDto<FindClientResponseDto>>{
         return this.clientService.findAll(findClintDto);
     }
 }

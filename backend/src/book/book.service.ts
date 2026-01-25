@@ -10,6 +10,7 @@ import { QueryBook } from "./interface/query-book.interface";
 import { BookCopyStatus } from "../book-copy/enum/book-status.enum";
 import { BookListResponse } from "./interface/list-book-response.interface";
 import { UpdateBook } from "./interface/update-book.interface";
+import { PaginatedResult } from "../common/interfaces/paginated.interface";
 
 @Injectable()
 export class BookService {
@@ -44,15 +45,19 @@ export class BookService {
         return book;
     }
 
-    async findAll(filters: QueryBook): Promise<BookListResponse[]> {
+    async findAll(filters: QueryBook): Promise<PaginatedResult<BookListResponse>> {
+        const page = Number(filters.page) || 1;
+        const limit = Number(filters.limit) || 10;
+        const skip = (page - 1) * limit;
+
         const AVAILABLE_SUM = `
-                                SUM(
-                                CASE 
-                                    WHEN copy.status = :available THEN 1 
-                                    ELSE 0 
-                                END
-                                )
-                            `;
+            SUM(
+                CASE 
+                    WHEN copy.status = :available THEN 1 
+                    ELSE 0 
+                END
+            )
+        `;
 
         const qb = this.bookRepository
             .createQueryBuilder("book")
@@ -60,6 +65,7 @@ export class BookService {
             .select("book.id", "id")
             .addSelect("book.title", "title")
             .addSelect("book.author", "author")
+            .addSelect("book.imageUrl", "imageurl") 
             .addSelect("COUNT(copy.id)", "totalcopies")
             .addSelect(AVAILABLE_SUM, "availablecopies")
             .where("book.active = :active", { active: true })
@@ -74,13 +80,21 @@ export class BookService {
             qb.andWhere("LOWER(book.author) LIKE LOWER(:author)", { author: `%${filters.author}%` });
         }
 
-        if (filters.onlyAvailable === true) {
+        if (filters.onlyAvailable) {
             qb.having(`${AVAILABLE_SUM} > 0`);
         }
 
+        const countQb = qb.clone();
+        const totalResult = await countQb.getRawMany();
+        const total = totalResult.length;
+
+
+        qb.limit(limit);
+        qb.offset(skip);
+
         const raw = await qb.getRawMany();
 
-        return raw.map(r => {
+        const data = raw.map(r => {
             const totalCopies = Number(r.totalcopies ?? 0);
             const availableCopies = Number(r.availablecopies ?? 0);
 
@@ -91,9 +105,18 @@ export class BookService {
                 totalCopies,
                 availableCopies,
                 hasAvailable: availableCopies > 0,
-                imageUrl: r.imageurl ?? "",
+                imageUrl: r.imageurl ?? "", 
             };
         });
+
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                lastPage: Math.ceil(total / limit),
+            },
+        };
     }
 
     async update(id: string, updateBook: UpdateBook) {

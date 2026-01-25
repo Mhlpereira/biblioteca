@@ -46,6 +46,7 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
                         synchronize: true,
                         dropSchema: true, 
                         logging: false,
+                        autoLoadEntities: true,
                     };
                 }
 
@@ -56,7 +57,7 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
                     username: config.get<string>("DATABASE_USER"),
                     password: config.get<string>("DATABASE_PASSWORD"),
                     database: config.get<string>("DATABASE_NAME"),
-                    entities: ["dist/**/*.entity.js"],
+                    autoLoadEntities: true, 
                     synchronize: false,
                     logging: config.get("NODE_ENV") !== "production",
                     namingStrategy: new SnakeNamingStrategy(),
@@ -76,7 +77,7 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
         AppService,
         {
             provide: APP_GUARD,
-            useClass: JwtAuthGuard,
+            useClass: JwtAuthGuard, 
         },
     ],
 })
