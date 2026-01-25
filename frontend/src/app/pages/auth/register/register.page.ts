@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { RegisterFormComponent } from '../../components/forms/register-form/register-form.component';
-import { RegisterRequest } from '../../core/model/auth.models';
+import { AuthService } from '../../../services/auth.service';
+import { RegisterFormComponent } from '../../../components/forms/register-form/register-form.component';
+import { RegisterRequest } from '../../../core/model/auth.models';
 
 @Component({
   selector: 'app-register-page',

@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
-import { LoginRequest } from '../../core/model/auth.models';
-import { LoginFormComponent } from '../../components/forms/login-form/login-form.component';
+import { AuthService } from '../../../services/auth.service';
+import { LoginRequest } from '../../../core/model/auth.models';
+import { LoginFormComponent } from '../../../components/forms/login-form/login-form.component';
 
 @Component({
   selector: 'app-login-page',
