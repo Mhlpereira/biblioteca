@@ -1,4 +1,4 @@
-import { IsDate, IsEnum, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsDate, IsEnum, IsOptional, IsString } from "class-validator";
 import { ReservationStatus } from "../enum/reservation-status.enum";
 
 export class FindReservationDto {
@@ -25,4 +25,8 @@ export class FindReservationDto {
     @IsEnum(ReservationStatus)
     @IsOptional()
     status?: ReservationStatus;
+
+    @IsOptional()
+    @IsBoolean()
+    overdueOnly?: boolean;
 }

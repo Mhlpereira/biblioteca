@@ -11,7 +11,7 @@ export const dataSourceOptions: DataSourceOptions = {
   database: process.env.DATABASE_NAME || 'biblioteca',
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/infra/database/typeorm/migrations/*{.ts,.js}'],
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: false,
   logging: process.env.NODE_ENV !== 'production',
   namingStrategy: new SnakeNamingStrategy()
 };

@@ -65,10 +65,12 @@ export class ReservationService {
                 "client.name AS clientName",
                 "book.title AS bookTitle",
                 "book.imageUl AS bookImage",
+                "book.author AS author",
                 "reservation.reservedAt AS reservedAt",
                 "reservation.dueDate AS dueDate",
                 "reservation.returnedAt AS returnedAt",
                 "reservation.status AS status",
+                "reservation.fineAmount AS fineAmount",
             ]);
 
         if (findReservation.clientId) {
@@ -95,6 +97,11 @@ export class ReservationService {
             qb.andWhere("reservation.status = :status", { status: findReservation.status });
         }
 
+        if (findReservation.overdueOnly) {
+            qb.andWhere("reservation.dueDate < :now", { now: new Date() });
+            qb.andWhere("reservation.status != :returned", { returned: ReservationStatus.RETURNED });
+        }
+
         const countQb = qb.clone().select("COUNT(*)", "total").getRawOne();
         const total = (await countQb).total;
 
@@ -102,16 +109,26 @@ export class ReservationService {
 
         const raw = await qb.getRawMany();
 
-        const data = raw.map(r => ({
-            id: r.id,
-            clientName: r.clientname,
-            bookTitle: r.booktitle,
-            bookImage: r.bookImage,
-            reservedAt: r.reservedat,
-            dueDate: r.duedate,
-            returnedAt: r.returnedat,
-            status: r.status,
-        }));
+        const now = new Date();
+
+        const data = raw.map(r => {
+            const isOverdue = r.status !== 'RETURNED' && new Date(r.duedate) < now;
+            const potentialFine = isOverdue ? this.calculateFineAmount(now.getTime() - new Date(r.duedate).getTime()) : undefined;
+            return {
+                id: r.id,
+                clientName: r.clientname,
+                bookTitle: r.booktitle,
+                bookImage: r.bookImage,
+                author: r.author,
+                reservedAt: r.reservedat,
+                dueDate: r.duedate,
+                returnedAt: r.returnedat,
+                status: r.status,
+                fineAmount: r.fineamount,
+                isOverdue,
+                potentialFine,
+            };
+        });
 
         const lastPage = Math.ceil(total / limit);
 
@@ -196,7 +213,13 @@ export class ReservationService {
     private calculateFine(reservation: Reservation, diffTime: number) {
         reservation.daysLate = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-        reservation.fineAmount = FINE_RULES.FIXED_FINE + reservation.daysLate * FINE_RULES.DAILY_PERCENT;
+        reservation.fineAmount = this.calculateFineAmount(diffTime);
+    }
+
+    private calculateFineAmount(diffTime: number): number {
+        const daysLate = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+        return FINE_RULES.FIXED_FINE + daysLate * FINE_RULES.DAILY_PERCENT;
     }
 
     async remove(id: string): Promise<void> {

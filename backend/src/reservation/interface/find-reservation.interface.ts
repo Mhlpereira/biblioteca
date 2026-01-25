@@ -9,4 +9,5 @@ export interface FindReservation extends PaginationDto{
         dueDate?: string;
         returnedAt?: string;
         status?: ReservationStatus;
+        overdueOnly?: boolean;
 }

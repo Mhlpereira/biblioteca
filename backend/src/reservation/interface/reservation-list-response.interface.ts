@@ -9,4 +9,7 @@ export interface ReservationListResponse {
     dueDate: Date;
     returnedAt?: Date;
     status: ReservationStatus;
+    fineAmount?: number;
+    isOverdue: boolean;
+    potentialFine?: number;
 }

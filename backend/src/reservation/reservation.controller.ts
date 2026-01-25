@@ -7,6 +7,7 @@ import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "../auth/types/jwt-payload.types";
 import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
 import { FindReservationResponseDto } from "./dto/find-response-reservation.dto";
+import { ReturnReservetionDto } from "./dto/return-reservation.dto";
 
 @Controller("reservation")
 export class ReservationController {
@@ -48,7 +49,7 @@ export class ReservationController {
 
     @Delete(":id")
     @HttpCode(204)
-    async remove(@Param("id") id: string) {
-        return this.reservationService.remove(id);
+    async remove(@Param() params: ReturnReservetionDto): Promise<void> {
+        return this.reservationService.remove(params.id);
     }
 }
