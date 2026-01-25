@@ -11,7 +11,7 @@ import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/guard/jwt.guard";
 import { BookCopyModule } from "./book-copy/book-copy.module";
-import { dataSourceOptions } from "./infra/database/typeorm/data-source";
+import dataSourceOptions from "./infra/database/typeorm/data-source";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 @Module({

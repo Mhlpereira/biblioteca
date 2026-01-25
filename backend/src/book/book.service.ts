@@ -87,6 +87,7 @@ export class BookService {
             totalCopies: Number(r.totalcopies),
             availableCopies: Number(r.availablecopies),
             hasAvailable: Number(r.availablecopies) > 0,
+            imageUrl: r.imageurl || '',
         }));
     }
 
