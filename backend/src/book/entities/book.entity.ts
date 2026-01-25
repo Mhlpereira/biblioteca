@@ -3,7 +3,7 @@ import { BookCopy } from "../../book-copy/entities/book-copy.entity";
 
 @Entity()
 export class Book {
-    @PrimaryColumn({ type: "char", length: 26 })
+    @PrimaryColumn({ type: "varchar", length: 26 })
     id: string;
 
     @Column()
@@ -18,7 +18,7 @@ export class Book {
     @Column({default: true})
     active: boolean;
 
-    @Column()
+    @Column({nullable: true})
     imageUrl: string;
 
     @CreateDateColumn()

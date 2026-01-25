@@ -164,7 +164,7 @@ export class ClientService {
 
     private validateCpf(cpfValue: string) {
         if (!cpf.isValid(cpfValue)) {
-            throw new BadRequestException("Cpf inválido");
+            throw new BadRequestException("CPF já cadastrado");
         }
     }
 

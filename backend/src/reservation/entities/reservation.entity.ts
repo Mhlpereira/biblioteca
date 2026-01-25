@@ -25,7 +25,6 @@ export class Reservation {
 
     @Column({
         type: "varchar",
-        enum: ReservationStatus,
         default: ReservationStatus.ACTIVE,
     })
     status: ReservationStatus;

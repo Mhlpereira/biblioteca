@@ -45,50 +45,55 @@ export class BookService {
     }
 
     async findAll(filters: QueryBook): Promise<BookListResponse[]> {
+        const AVAILABLE_SUM = `
+                                SUM(
+                                CASE 
+                                    WHEN copy.status = :available THEN 1 
+                                    ELSE 0 
+                                END
+                                )
+                            `;
+
         const qb = this.bookRepository
             .createQueryBuilder("book")
             .leftJoin("book.copies", "copy")
-            .select([
-                "book.id AS id",
-                "book.title AS title",
-                "book.author AS author",
-                "COUNT(copy.id) AS totalCopies",
-                `
-            SUM(
-                CASE 
-                    WHEN copy.status = :available THEN 1 
-                    ELSE 0 
-                END
-            ) AS availableCopies
-            `,
-            ])
-            .where("book.active = true")
+            .select("book.id", "id")
+            .addSelect("book.title", "title")
+            .addSelect("book.author", "author")
+            .addSelect("COUNT(copy.id)", "totalcopies")
+            .addSelect(AVAILABLE_SUM, "availablecopies")
+            .where("book.active = :active", { active: true })
             .setParameter("available", BookCopyStatus.AVAILABLE)
             .groupBy("book.id");
 
         if (filters.title) {
-            qb.andWhere("book.title ILIKE :title", { title: `%${filters.title}%` });
+            qb.andWhere("LOWER(book.title) LIKE LOWER(:title)", { title: `%${filters.title}%` });
         }
 
         if (filters.author) {
-            qb.andWhere("book.author ILIKE :author", { author: `%${filters.author}%` });
+            qb.andWhere("LOWER(book.author) LIKE LOWER(:author)", { author: `%${filters.author}%` });
         }
 
         if (filters.onlyAvailable === true) {
-            qb.having("availableCopies > 0");
+            qb.having(`${AVAILABLE_SUM} > 0`);
         }
 
         const raw = await qb.getRawMany();
 
-        return raw.map(r => ({
-            id: r.id,
-            title: r.title,
-            author: r.author,
-            totalCopies: Number(r.totalcopies),
-            availableCopies: Number(r.availablecopies),
-            hasAvailable: Number(r.availablecopies) > 0,
-            imageUrl: r.imageurl || '',
-        }));
+        return raw.map(r => {
+            const totalCopies = Number(r.totalcopies ?? 0);
+            const availableCopies = Number(r.availablecopies ?? 0);
+
+            return {
+                id: r.id,
+                title: r.title,
+                author: r.author,
+                totalCopies,
+                availableCopies,
+                hasAvailable: availableCopies > 0,
+                imageUrl: r.imageurl ?? "",
+            };
+        });
     }
 
     async update(id: string, updateBook: UpdateBook) {
@@ -106,12 +111,12 @@ export class BookService {
     }
 
     async deactivate(id: string) {
-        const book = await this.findBookById(id)
+        const book = await this.findBookById(id);
 
         book.active = false;
 
         //adiciona lógica de reservas ativas
-        
+
         await this.bookRepository.save(book);
 
         return book;

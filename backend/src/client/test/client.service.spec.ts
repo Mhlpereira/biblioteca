@@ -14,11 +14,22 @@ describe("ClientService", () => {
     let cryptoService: CryptoService;
     let reservationService: ReservationService;
 
+    const mockQueryBuilder = {
+        select: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        clone: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockResolvedValue({ total: 1 }),
+        take: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([]),
+    };
+
     const mockRepository = {
         create: jest.fn(),
         save: jest.fn(),
         findOneBy: jest.fn(),
-        createQueryBuilder: jest.fn(),
+        createQueryBuilder: jest.fn(() => mockQueryBuilder),
+        remove: jest.fn()
     };
 
     const mockCryptoService = {
@@ -37,7 +48,7 @@ describe("ClientService", () => {
                 ClientService,
                 {
                     provide: getRepositoryToken(Client),
-                    useValue: mockRepository,
+                    useValue: mockRepository
                 },
                 {
                     provide: CryptoService,
@@ -67,12 +78,12 @@ describe("ClientService", () => {
             mockRepository.save.mockResolvedValue({ id: "1" });
 
             const result = await service.createClient({
-                cpf: "12345678909",
+                cpf: "52998224725",
                 name: "Mário",
                 lastName: "Henrique",
                 password: "123",
                 active: true,
-                role: Role.ADMIN
+                role: Role.ADMIN,
             });
 
             expect(repo.save).toHaveBeenCalled();
@@ -87,7 +98,7 @@ describe("ClientService", () => {
                     lastName: "Teste",
                     password: "123",
                     active: true,
-                    role: Role.ADMIN
+                    role: Role.ADMIN,
                 })
             ).rejects.toThrow(BadRequestException);
         });
@@ -102,9 +113,39 @@ describe("ClientService", () => {
                     lastName: "Teste",
                     password: "123",
                     active: true,
-                    role: Role.ADMIN
+                    role: Role.ADMIN,
                 })
             ).rejects.toThrow("CPF já cadastrado");
+        });
+    });
+
+    describe("findAll", () => {
+        it("should apply all filters in QueryBuilder", async () => {
+            const filters = {
+                name: "Mário",
+                lastName: "Henrique",
+                cpf: "123",
+                active: true,
+                role: Role.ADMIN,
+                page: 1,
+                limit: 10,
+            };
+
+            mockQueryBuilder.getRawMany.mockResolvedValue([
+                { id: "1", cpf: "123", name: "M", lastname: "H", active: true, role: "ADMIN" },
+            ]);
+
+            const result = await service.findAll(filters);
+
+            expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith("client");
+            expect(mockQueryBuilder.andWhere).toHaveBeenCalledTimes(5);
+            expect(result.data.length).toBe(1);
+        });
+
+        it("should use default pagination values", async () => {
+            await service.findAll({});
+            expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
+            expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0);
         });
     });
 
@@ -120,12 +161,9 @@ describe("ClientService", () => {
         it("should throw if not found", async () => {
             mockRepository.findOneBy.mockResolvedValue(null);
 
-            await expect(service.findByIdorThrow("1")).rejects.toThrow(
-                NotFoundException
-            );
+            await expect(service.findByIdorThrow("1")).rejects.toThrow(NotFoundException);
         });
     });
-
 
     describe("update", () => {
         it("should update client data", async () => {
@@ -139,7 +177,6 @@ describe("ClientService", () => {
             expect(result.name).toBe("New");
         });
     });
-
 
     describe("changePassword", () => {
         it("should change password successfully", async () => {
@@ -159,16 +196,6 @@ describe("ClientService", () => {
             expect(repo.save).toHaveBeenCalled();
         });
 
-        it("should throw if passwords do not match", async () => {
-            await expect(
-                service.changePassword("1", {
-                    currentPassword: "old",
-                    newPassword: "a",
-                    confirmPassword: "b",
-                })
-            ).rejects.toThrow("As senhas não conferem");
-        });
-
         it("should throw if current password is invalid", async () => {
             jest.spyOn(service, "findByIdorThrow").mockResolvedValue({
                 password: "hashed",
@@ -184,8 +211,24 @@ describe("ClientService", () => {
                 })
             ).rejects.toThrow("Senha atual inválida");
         });
-    });
 
+        it("should throw if passwords do not match", async () => {
+            jest.spyOn(service, "findByIdorThrow").mockResolvedValue({
+                id: "1",
+                password: "hashed-password",
+            } as any);
+
+            await expect(
+                service.changePassword("1", {
+                    currentPassword: "any",
+                    newPassword: "123",
+                    confirmPassword: "456",
+                })
+            ).rejects.toThrow("As senhas não conferem");
+        });
+
+
+    });
 
     describe("deleteClient", () => {
         it("should deactivate client and remove reservations", async () => {
@@ -201,6 +244,11 @@ describe("ClientService", () => {
 
             expect(reservationService.remove).toHaveBeenCalledTimes(2);
             expect(client.active).toBe(false);
+        });
+
+        it("should throw if client not found", async () => {
+            mockRepository.findOneBy.mockResolvedValue(undefined);
+            await expect(service.deleteClient("99")).rejects.toThrow(NotFoundException);
         });
     });
 });

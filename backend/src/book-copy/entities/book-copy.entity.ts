@@ -13,7 +13,6 @@ export class BookCopy {
 
     @Column({
         type: "varchar",
-        enum: BookCopyStatus,
         default: BookCopyStatus.AVAILABLE,
     })
     status: BookCopyStatus;
