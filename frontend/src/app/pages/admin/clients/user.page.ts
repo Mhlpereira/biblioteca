@@ -10,7 +10,7 @@ import { PaginatedResult } from "../../../core/model/pagination.model";
 @Component({
     selector: "app-users-page",
     standalone: true,
-    imports: [CommonModule, FormsModule, PaginationComponent], // <--- Adicione aqui
+    imports: [CommonModule, FormsModule, PaginationComponent], 
     templateUrl: "./users.page.html",
 })
 export class UsersPage implements OnInit {

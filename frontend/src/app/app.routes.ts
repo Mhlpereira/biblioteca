@@ -8,6 +8,7 @@ import { NotFound } from "./pages/not-found/not-found.page";
 import { DashboardPage } from "./pages/client/dashboard/dashboard.page";
 import { SettingsPage } from "./pages/client/settings/settings.page";
 import { UsersPage } from "./pages/admin/clients/user.page";
+import { BookManagementPage } from "./pages/admin/books/book-management.page";
 
 export const routes: Routes = [
     { path: "", component: LoginPage },
@@ -16,7 +17,7 @@ export const routes: Routes = [
     { path: "home", component: DashboardPage },
     { path: "settings", component: SettingsPage },
     { path: "users", component: UsersPage },
-
+    { path: "book", component: BookManagementPage },
     { path: "", component: SidebarComponent, canActivate: [authGuard], children: [] },
 
     { path: "**", component: NotFound },
