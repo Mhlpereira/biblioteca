@@ -1,0 +1,138 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+    <div class="space-y-1">
+        <label class="block text-sm font-medium text-slate-700">CPF</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0c4 8.5 4.5 9 1.5 15H5.25"
+                    />
+                </svg>
+            </div>
+            <input
+                type="text"
+                formControlName="cpf"
+                mask="000.000.000-00"
+                placeholder="000.000.000-00"
+                [class.border-red-300]="form.get('cpf')?.invalid && form.get('cpf')?.touched"
+                class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+            />
+        </div>
+        @if (form.get("cpf")?.invalid && form.get("cpf")?.touched) {
+            <div class="text-sm text-red-600">CPF inválido</div>
+        }
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div class="space-y-1">
+            <label class="block text-sm font-medium text-slate-700">Nome</label>
+            <input
+                type="text"
+                formControlName="name"
+                placeholder="João"
+                [class.border-red-300]="form.get('name')?.invalid && form.get('name')?.touched"
+                class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+            />
+            @if (form.get("name")?.invalid && form.get("name")?.touched) {
+                <div class="text-sm text-red-600">Obrigatório</div>
+            }
+        </div>
+
+        <div class="space-y-1">
+            <label class="block text-sm font-medium text-slate-700">Sobrenome</label>
+            <input
+                type="text"
+                formControlName="lastName"
+                placeholder="Carvalho"
+                [class.border-red-300]="form.get('lastName')?.invalid && form.get('lastName')?.touched"
+                class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+            />
+            @if (form.get("lastName")?.invalid && form.get("lastName")?.touched) {
+                <div class="text-sm text-red-600">Obrigatório</div>
+            }
+        </div>
+    </div>
+
+    <div class="space-y-1">
+        <label class="block text-sm font-medium text-slate-700">Senha</label>
+        <div class="relative">
+            <input
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="••••••••"
+                [class.border-red-300]="
+                    form.get('password')?.invalid && (form.get('password')?.dirty || form.get('password')?.touched)
+                "
+                class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+            />
+            <button
+                type="button"
+                (click)="togglePassword()"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 cursor-pointer"
+            >
+                <span class="text-xs">{{ showPassword ? "Ocultar" : "Mostrar" }}</span>
+            </button>
+        </div>
+
+        @if (form.get("password")?.invalid && (form.get("password")?.dirty || form.get("password")?.touched)) {
+            @if (form.get("password")?.hasError("required")) {
+                <div class="text-sm text-red-600">Senha obrigatória</div>
+            }
+        }
+    </div>
+
+    <div class="space-y-1">
+        <label class="block text-sm font-medium text-slate-700">Confirmar Senha</label>
+        <div class="relative">
+            <input
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                placeholder="••••••••"
+                [class.border-red-300]="form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched"
+                class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+            />
+        </div>
+        @if (form.get("confirmPassword")?.hasError("matching") && form.get("confirmPassword")?.touched) {
+            <div class="text-sm text-red-600 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                </svg>
+                As senhas não coincidem.
+            </div>
+        }
+    </div>
+
+    <button
+        type="submit"
+        [disabled]="form.invalid || isLoading"
+        class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+    >
+        @if (isLoading) {
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+            </svg>
+            Criando conta...
+        } @else {
+            Criar Conta
+        }
+    </button>
+
+    @if (errorMessage) {
+        <div class="p-3 bg-red-100 text-red-700 rounded text-sm text-center border border-red-200">
+            {{ errorMessage }}
+        </div>
+    }
+</form>

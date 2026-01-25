@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject } from "@angular/core"; // <--- Adicione Input e Output
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { NgxMaskDirective } from "ngx-mask";
-import { LoginRequest } from "../../../model/auth.models";
+import { LoginRequest } from "../../../core/model/auth.models";
 import { PasswordValidator } from "../../../shared/validators/password.validator";
 
 @Component({

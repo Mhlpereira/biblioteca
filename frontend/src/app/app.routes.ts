@@ -1,7 +1,11 @@
 import { Routes } from "@angular/router";
 import { LoginPageComponent } from "./pages/login/login.page";
+import { RegisterPage } from "./pages/register/register.page";
 
-export const routes: Routes = [{ path: "", component: LoginPageComponent }];
+export const routes: Routes = [
+    { path: "", component: LoginPageComponent },
+    { path: "register", component: RegisterPage },
+];
 
 /*
 

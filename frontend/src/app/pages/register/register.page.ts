@@ -1,38 +1,35 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { LoginRequest } from '../../model/auth.models';
-import { LoginFormComponent } from '../../components/forms/login-form/login-form.component';
+import { RegisterFormComponent } from '../../components/forms/register-form/register-form.component';
+import { RegisterRequest } from '../../core/model/auth.models';
 
 @Component({
   selector: 'app-register-page',
   standalone: true,
-  imports: [LoginFormComponent, RouterLink], 
-  templateUrl: './login.page.html',
-  styleUrl: './login.css'
+  imports: [RegisterFormComponent, RouterLink],
+  templateUrl: './register.page.html',
+  styleUrl: './register.page.css'
 })
-export class RegisterPageComponent {
+export class RegisterPage {
   private authService = inject(AuthService);
   private router = inject(Router);
-
 
   isLoading = false;
   errorMessage = '';
 
-
-  handleLogin(credentials: LoginRequest) {
+  handleRegister(data: RegisterRequest) {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.login(credentials).subscribe({
+    this.authService.register(data).subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/login']); 
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = 'CPF ou senha incorretos.';
-        console.error(err);
+        this.errorMessage = err.error?.message || 'Erro ao criar conta. Tente novamente.';
       }
     });
   }

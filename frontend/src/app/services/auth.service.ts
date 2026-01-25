@@ -1,8 +1,8 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { LoginRequest } from "../model/auth.models";
+import { LoginRequest, RegisterRequest } from "../core/model/auth.models";
 import { UserStore } from "../core/stores/user.store";
-import { User } from "../model/user.model";
+import { User } from "../core/model/user.model";
 import { catchError, Observable, tap } from "rxjs";
 
 @Injectable({
@@ -24,12 +24,16 @@ export class AuthService {
     getProfile(): Observable<User> {
         return this.http.get<User>(`${this.API_URL}/me`, { withCredentials: true }).pipe(
             tap(user => {
-                this.userStore.setUser(user); 
+                this.userStore.setUser(user);
             }),
             catchError(err => {
                 this.userStore.logout();
                 throw err;
             })
         );
+    }
+
+    register(data: RegisterRequest) {
+        return this.http.post<void>(`${this.API_URL}/register`, data);
     }
 }
