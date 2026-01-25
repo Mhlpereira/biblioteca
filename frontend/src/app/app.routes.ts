@@ -9,16 +9,32 @@ import { DashboardPage } from "./pages/client/dashboard/dashboard.page";
 import { SettingsPage } from "./pages/client/settings/settings.page";
 import { UsersPage } from "./pages/admin/clients/user.page";
 import { BookManagementPage } from "./pages/admin/books/book-management.page";
+import { adminGuard } from "./core/guards/admin.guard";
 
 export const routes: Routes = [
-    { path: "", component: LoginPage },
-    { path: "registro", component: RegisterPage },
-    { path: "catalogo", component: CatalogPage },
-    { path: "home", component: DashboardPage },
-    { path: "settings", component: SettingsPage },
-    { path: "users", component: UsersPage },
-    { path: "book", component: BookManagementPage },
-    { path: "", component: SidebarComponent, canActivate: [authGuard], children: [] },
+    { path: "login", component: LoginPage },
+    { path: "register", component: RegisterPage },
 
+    {
+        path: "",
+        component: SidebarComponent,
+        canActivate: [authGuard], 
+        children: [
+            { path: "dashboard", component: DashboardPage },
+            { path: "catalog", component: CatalogPage },
+            { path: "settings", component: SettingsPage },
+            {
+                path: "admin",
+                canActivate: [adminGuard], 
+                children: [
+                    { path: "dashboard", component: DashboardPage }, 
+                    { path: "books", component: BookManagementPage }, 
+                    { path: "users", component: UsersPage }, 
+                ],
+            },
+
+            { path: "", redirectTo: "dashboard", pathMatch: "full" },
+        ],
+    },
     { path: "**", component: NotFound },
 ];
