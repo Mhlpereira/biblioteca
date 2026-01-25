@@ -16,7 +16,6 @@ export class RolesGuard implements CanActivate {
             context.getClass(),
         ]);
 
-        // rota pública e sem usuário → deixa passar
         if (!user) return true;
 
         if (!deniedRoles || deniedRoles.length === 0) {

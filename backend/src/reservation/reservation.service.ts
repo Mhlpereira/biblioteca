@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, Inject, forwardRef } from "@nestjs/common";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
 import { InjectRepository, InjectDataSource } from "@nestjs/typeorm";
 import { Reservation } from "./entities/reservation.entity";
@@ -20,6 +20,7 @@ export class ReservationService {
     constructor(
         @InjectRepository(Reservation)
         private readonly reservatioRepository: Repository<Reservation>,
+        @Inject(forwardRef(() => ClientService))
         private readonly clientService: ClientService,
         private readonly bookCopyService: BookCopyService,
         @InjectDataSource()

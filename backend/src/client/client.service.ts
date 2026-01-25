@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, Inject, forwardRef } from "@nestjs/common";
 import { cpf } from "cpf-cnpj-validator";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Client } from "./entities/client.entity";
@@ -19,6 +19,7 @@ export class ClientService {
         @InjectRepository(Client)
         private readonly clientRepository: Repository<Client>,
         private readonly cryptoService: CryptoService,
+        @Inject(forwardRef(() => ReservationService))
         private readonly reservationService: ReservationService
     ) {}
 
