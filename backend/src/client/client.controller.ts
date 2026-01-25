@@ -7,6 +7,7 @@ import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "../auth/types/jwt-payload.types";
 import { DenyRoles } from "../auth/decorators/roles.decorator";
 import { Role } from "../auth/enum/role.enum";
+import { FindClientDto } from "./dto/find-client.dto";
 
 @Controller("client")
 export class ClientController {
@@ -52,7 +53,7 @@ export class ClientController {
     @Get("findAll")
     @HttpCode(200)
     @DenyRoles(Role.USER)
-    async findAll(){
-        return this.clientService.findAll();
+    async findAll(findClintDto: FindClientDto){
+        return this.clientService.findAll(findClintDto);
     }
 }

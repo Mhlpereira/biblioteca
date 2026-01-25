@@ -9,6 +9,9 @@ import { UpdateClient } from "./interface/update-client.interface";
 import { CryptoService } from "../common/crypto/crypto.service";
 import { UpdatePassword } from "./interface/update-password.interface";
 import { ReservationService } from "../reservation/reservation.service";
+import { FindClient } from "./interface/find-client.interface";
+import { PaginatedResult } from "../common/interfaces/paginated.interface";
+import { ResponseFindClient } from "./interface/response-find-client.interface";
 
 @Injectable()
 export class ClientService {
@@ -76,9 +79,74 @@ export class ClientService {
         return {message: "Senha alterada com sucesso!"};
     }
 
-    async findAll(){
+    async findAll(findClient: FindClient): Promise<PaginatedResult<ResponseFindClient>> {
+        const page = findClient.page || 1;
+        const limit = findClient.limit || 10;
+        const skip = (page - 1) * limit;
 
+        const qb = this.clientRepository
+            .createQueryBuilder("client")
+            .select([
+                "client.id AS id",
+                "client.cpf AS cpf",
+                "client.name AS name",
+                "client.lastName AS lastName",
+                "client.active AS active",
+                "client.role AS role",
+                "client.createdAt AS createdAt",
+                "client.updatedAt AS updatedAt",
+            ]);
+
+
+        if (findClient.cpf) {
+            qb.andWhere("client.cpf LIKE :cpf", { cpf: `%${findClient.cpf}%` });
+        }
+
+        if (findClient.name) {
+            qb.andWhere("client.name LIKE :name", { name: `%${findClient.name}%` });
+        }
+
+        if (findClient.lastName) {
+            qb.andWhere("client.lastName LIKE :lastName", { lastName: `%${findClient.lastName}%` });
+        }
+
+        if (findClient.active !== undefined) {
+            qb.andWhere("client.active = :active", { active: findClient.active });
+        }
+
+        if (findClient.role) {
+            qb.andWhere("client.role = :role", { role: findClient.role });
+        }
+
+        const countQb = qb.clone().select("COUNT(*)", "total").getRawOne();
+        const total = (await countQb).total;
+
+        qb.take(limit).skip(skip);
+
+        const raw = await qb.getRawMany();
+
+        const data = raw.map(r => ({
+            id: r.id,
+            cpf: r.cpf,
+            name: r.name,
+            lastName: r.lastname,
+            active: r.active,
+            role: r.role,
+        }));
+
+        const lastPage = Math.ceil(total / limit);
+
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                lastPage,
+            },
+        };
     }
+
+    async toogleStatus(){}
 
     async deleteClient(id:string){
         const client = await this.findByIdorThrow(id);

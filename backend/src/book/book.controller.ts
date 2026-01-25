@@ -4,14 +4,16 @@ import { CreateBookDto } from "./dto/book-create.dto";
 import { UpdateBookDto } from "./dto/update-book.dto";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { BookCreateOutput } from "./dto/book-create-output.dto";
-import { AddBookCopyDto } from "../book-copy/dto/add-copy.dto";
 import { FindBooksQueryDto } from "./dto/find-book-query.dto";
+import { DenyRoles } from "../auth/decorators/roles.decorator";
+import { Role } from "../auth/enum/role.enum";
 
 @Controller("books")
 export class BookController {
     constructor(private readonly bookService: BookService) {}
 
     @Post("create")
+    @DenyRoles(Role.USER)
     @HttpCode(201)
     @ApiOperation({ summary: "Create book" })
     @ApiResponse({ status: 201, description: "Book created" })
@@ -40,6 +42,7 @@ export class BookController {
     }
 
     @Patch(":id")
+    @DenyRoles(Role.USER)
     @HttpCode(200)
     @ApiOperation({ summary: "Update book info" })
     @ApiResponse({ status: 200, description: "Book deactivated" })
@@ -49,6 +52,7 @@ export class BookController {
     }
 
     @Patch(":id/deactivate")
+    @DenyRoles(Role.USER)
     @HttpCode(200)
     @ApiOperation({ summary: "Deactivate book" })
     @ApiResponse({ status: 200, description: "Book deactivated", type: BookCreateOutput })

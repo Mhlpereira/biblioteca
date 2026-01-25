@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { PaginationDto } from "../../common/dto/pagination.dto";
 
-export class FindReservationResponseDto {
+export class FindReservationResponseDto extends PaginationDto {
     @ApiProperty()
     id: string;
 

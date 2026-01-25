@@ -5,4 +5,5 @@ export interface BookListResponse {
     totalCopies: number;
     availableCopies: number;
     hasAvailable: boolean;
+    imageUrl: string;
 }

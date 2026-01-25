@@ -19,4 +19,7 @@ export class BookListResponseDto extends PaginationDto {
 
     @ApiProperty({ example: "true" })
     hasAvailable: boolean;
+
+    @ApiProperty({example: 'http://example.com'})
+    imageUrl: string;
 }

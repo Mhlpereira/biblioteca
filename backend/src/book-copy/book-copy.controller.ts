@@ -2,7 +2,10 @@ import { Controller, Post, Param, Get, Body, HttpCode, Patch } from "@nestjs/com
 import { BookCopyService } from "./book-copy.service";
 import { AddBookCopyDto } from "./dto/add-copy.dto";
 import { RemoveCopyDto } from "./dto/remove-copy.dto";
+import { DenyRoles } from "../auth/decorators/roles.decorator";
+import { Role } from "../auth/enum/role.enum";
 
+@DenyRoles(Role.USER)
 @Controller("books/:bookId/copies")
 export class BookCopyController {
     constructor(private readonly bookCopyService: BookCopyService) {}
