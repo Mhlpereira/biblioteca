@@ -4,6 +4,7 @@ import { RegisterPage } from "./pages/auth/register/register.page";
 import { SidebarComponent } from "./components/layout/sidebar/sidebar.component";
 import { authGuard } from "./core/guards/auth.guard";
 import { CatalogPage } from "./pages/client/catalog/catalog.page";
+import { NotFound } from "./pages/not-found/not-found.page";
 
 export const routes: Routes = [
     { path: "", component: LoginPage },
@@ -11,4 +12,6 @@ export const routes: Routes = [
     { path: "catalog", component: CatalogPage },
 
     { path: "", component: SidebarComponent, canActivate: [authGuard], children: [] },
+
+    { path: "**", component: NotFound }
 ];
