@@ -1,39 +1,45 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../services/auth.service';
-import { LoginRequest } from '../../../core/model/auth.models';
-import { LoginFormComponent } from '../../../components/forms/login-form/login-form.component';
+import { Component, inject, OnInit } from "@angular/core";
+import { Router, RouterLink } from "@angular/router";
+import { AuthService } from "../../../services/auth.service";
+import { LoginRequest } from "../../../core/model/auth.models";
+import { LoginFormComponent } from "../../../components/forms/login-form/login-form.component";
+import { UserStore } from "../../../core/stores/user.store";
 
 @Component({
-  selector: 'app-login-page',
-  standalone: true,
-  imports: [LoginFormComponent, RouterLink], 
-  templateUrl: './login.page.html',
-  styleUrl: './login.css'
+    selector: "app-login-page",
+    standalone: true,
+    imports: [LoginFormComponent, RouterLink],
+    templateUrl: "./login.page.html",
+    styleUrl: "./login.css",
 })
-export class LoginPage {
-  private authService = inject(AuthService);
-  private router = inject(Router);
+export class LoginPage implements OnInit {
+    private authService = inject(AuthService);
+    private router = inject(Router);
+    public userStore = inject(UserStore);
 
+    isLoading = false;
+    errorMessage = "";
 
-  isLoading = false;
-  errorMessage = '';
+    ngOnInit() {
+        if (this.userStore.isAuthenticated()) {
+            this.router.navigate(["/dashboard"]);
+        }
+    }
 
+    handleLogin(credentials: LoginRequest) {
+        this.isLoading = true;
+        this.errorMessage = "";
 
-  handleLogin(credentials: LoginRequest) {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.authService.login(credentials).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = 'CPF ou senha incorretos.';
-        console.error(err);
-      }
-    });
-  }
+        this.authService.login(credentials).subscribe({
+            next: () => {
+                this.isLoading = false;
+                this.router.navigate(["/dashboard"]);
+            },
+            error: err => {
+                this.isLoading = false;
+                this.errorMessage = "CPF ou senha incorretos.";
+                console.error(err);
+            },
+        });
+    }
 }
