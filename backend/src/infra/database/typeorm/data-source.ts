@@ -16,5 +16,4 @@ const dataSource = new DataSource({
   namingStrategy: new SnakeNamingStrategy(),
 });
 
-export const dataSourceOptions = dataSource.options;
 export default dataSource;

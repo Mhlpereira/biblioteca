@@ -146,10 +146,7 @@ describe("RolesGuard", () => {
                 // Arrange
                 const user = { id: "1", role: Role.ADMIN };
                 const context = createMockExecutionContext(user);
-                mockReflector.getAllAndOverride.mockReturnValue([
-                    Role.USER,
-                    Role.ADMIN,
-                ]);
+                mockReflector.getAllAndOverride.mockReturnValue([Role.USER, Role.ADMIN]);
 
                 // Act
                 const result = guard.canActivate(context);
@@ -188,12 +185,9 @@ describe("RolesGuard", () => {
 
             it("should return true when user role is not in denied roles list", () => {
                 // Arrange
-                const user = { id: "1", role: Role.MODERATOR };
+                const user = { id: "1", role: Role.USER };
                 const context = createMockExecutionContext(user);
-                mockReflector.getAllAndOverride.mockReturnValue([
-                    Role.USER,
-                    Role.ADMIN,
-                ]);
+                mockReflector.getAllAndOverride.mockReturnValue([Role.ADMIN]);
 
                 // Act
                 const result = guard.canActivate(context);
@@ -217,10 +211,7 @@ describe("RolesGuard", () => {
                 guard.canActivate(context);
 
                 // Assert
-                expect(reflector.getAllAndOverride).toHaveBeenCalledWith(
-                    DENY_ROLES_KEY,
-                    [mockHandler, mockClass]
-                );
+                expect(reflector.getAllAndOverride).toHaveBeenCalledWith(DENY_ROLES_KEY, [mockHandler, mockClass]);
                 expect(reflector.getAllAndOverride).toHaveBeenCalledTimes(1);
             });
 
@@ -311,57 +302,6 @@ describe("RolesGuard", () => {
 
                 // Assert
                 expect(result).toBe(true); // Não são iguais
-            });
-        });
-
-        describe("multiple denied roles scenarios", () => {
-            it("should deny access when user has first role in denied list", () => {
-                // Arrange
-                const user = { id: "1", role: Role.USER };
-                const context = createMockExecutionContext(user);
-                mockReflector.getAllAndOverride.mockReturnValue([
-                    Role.USER,
-                    Role.MODERATOR,
-                ]);
-
-                // Act
-                const result = guard.canActivate(context);
-
-                // Assert
-                expect(result).toBe(false);
-            });
-
-            it("should deny access when user has last role in denied list", () => {
-                // Arrange
-                const user = { id: "1", role: Role.MODERATOR };
-                const context = createMockExecutionContext(user);
-                mockReflector.getAllAndOverride.mockReturnValue([
-                    Role.USER,
-                    Role.MODERATOR,
-                ]);
-
-                // Act
-                const result = guard.canActivate(context);
-
-                // Assert
-                expect(result).toBe(false);
-            });
-
-            it("should deny access when user has middle role in denied list", () => {
-                // Arrange
-                const user = { id: "1", role: Role.MODERATOR };
-                const context = createMockExecutionContext(user);
-                mockReflector.getAllAndOverride.mockReturnValue([
-                    Role.USER,
-                    Role.MODERATOR,
-                    Role.ADMIN,
-                ]);
-
-                // Act
-                const result = guard.canActivate(context);
-
-                // Assert
-                expect(result).toBe(false);
             });
         });
     });

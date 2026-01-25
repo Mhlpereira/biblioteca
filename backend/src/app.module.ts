@@ -7,12 +7,12 @@ import { ClientModule } from "./client/client.module";
 import { AuthModule } from "./auth/auth.module";
 import { LoggerModule } from "nestjs-pino";
 import { CryptoModule } from "./common/crypto/crypto.module";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/guard/jwt.guard";
 import { BookCopyModule } from "./book-copy/book-copy.module";
-import { dataSourceOptions } from "./infra/database/typeorm/data-source";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 
 @Module({
     imports: [
@@ -20,6 +20,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
             isGlobal: true,
             envFilePath: [".env"],
         }),
+
         LoggerModule.forRoot({
             pinoHttp: {
                 transport: {
@@ -31,9 +32,23 @@ import { TypeOrmModule } from "@nestjs/typeorm";
                 },
             },
         }),
+
         TypeOrmModule.forRootAsync({
-            useFactory: async () => dataSourceOptions,
+            inject: [ConfigService],
+            useFactory: (config: ConfigService) => ({
+                type: "mysql",
+                host: config.get<string>("DATABASE_HOST"),
+                port: config.get<number>("DATABASE_PORT"),
+                username: config.get<string>("DATABASE_USER"),
+                password: config.get<string>("DATABASE_PASSWORD"),
+                database: config.get<string>("DATABASE_NAME"),
+                entities: ["dist/**/*.entity.js"],
+                synchronize: false,
+                logging: config.get("NODE_ENV") !== "production",
+                namingStrategy: new SnakeNamingStrategy(),
+            }),
         }),
+
         BookModule,
         ReservationModule,
         ClientModule,
