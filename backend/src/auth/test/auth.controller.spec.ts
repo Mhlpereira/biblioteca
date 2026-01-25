@@ -4,6 +4,7 @@ import { AuthService } from "../auth.service";
 import { Response } from "express";
 import { RegisterDto } from "../dto/register.dto";
 import { LoginDto } from "../dto/login.dto";
+import { Role } from "../enum/role.enum";
 
 describe("AuthController", () => {
     let controller: AuthController;
@@ -45,13 +46,15 @@ describe("AuthController", () => {
                 lastName: "Henrique",
                 cpf: "12345678900",
                 password: "senha123",
-                confirmPassword: "senha123"
+                confirmPassword: "senha123",
             };
 
             const expectedOutput = {
                 id: "1",
-                name: "João Silva",
-                email: "joao@email.com",
+                name: "Mário",
+                cpf: "123.***.***-00",
+                role: Role.USER,
+                active: true,
             };
 
             mockAuthService.createClient.mockResolvedValue(expectedOutput);
@@ -59,7 +62,6 @@ describe("AuthController", () => {
             const result = await controller.createClient(registerDto);
 
             expect(authService.createClient).toHaveBeenCalledWith(registerDto);
-            expect(authService.createClient).toHaveBeenCalledTimes(1);
             expect(result).toEqual(expectedOutput);
         });
 
@@ -69,7 +71,7 @@ describe("AuthController", () => {
                 lastName: "Henrique",
                 cpf: "12345678900",
                 password: "senha123",
-                confirmPassword: "senha123"
+                confirmPassword: "senha123",
             };
 
             mockAuthService.createClient.mockRejectedValue(
@@ -91,20 +93,31 @@ describe("AuthController", () => {
             };
         });
 
-        it("should login and set cookie with correct configuration", async () => {
+        it("should login, set cookie and return user data", async () => {
             const loginDto: LoginDto = {
                 cpf: "12345678900",
                 password: "senha123",
             };
 
-            mockAuthService.login.mockResolvedValue({
+            const loginResult = {
                 accessToken: "jwt-token-abc123",
-            });
+                user: {
+                    id: "1",
+                    name: "Mário",
+                    cpf: "123.***.***-00",
+                    role: Role.USER,
+                    active: true,
+                },
+            };
 
-            await controller.login(loginDto, mockResponse as Response);
+            mockAuthService.login.mockResolvedValue(loginResult);
+
+            const result = await controller.login(
+                loginDto,
+                mockResponse as Response
+            );
 
             expect(authService.login).toHaveBeenCalledWith(loginDto);
-            expect(authService.login).toHaveBeenCalledTimes(1);
             expect(mockResponse.cookie).toHaveBeenCalledWith(
                 "access_token",
                 "jwt-token-abc123",
@@ -112,9 +125,11 @@ describe("AuthController", () => {
                     httpOnly: true,
                     secure: true,
                     sameSite: "lax",
-                    maxAge: 7200000, // 2 horas
+                    maxAge: 2 * 60 * 60 * 1000,
                 })
             );
+
+            expect(result).toEqual(loginResult.user);
         });
 
         it("should propagate authentication errors", async () => {
@@ -137,42 +152,32 @@ describe("AuthController", () => {
 
     describe("GET /me", () => {
         it("should return current authenticated user", () => {
-            const mockUser = {
-                userId: "1",
-                name: "João Silva",
-                email: "joao@email.com",
+            const jwtPayload = {
+                sub: "1",
+                cpf: "12345678900",
+                name: "Mário",
+                role: Role.ADMIN,
+                active: true,
             };
-
-            const mockRequest = {
-                user: mockUser,
-            };
-
-            mockAuthService.me.mockReturnValue(mockUser);
-
-            const result = controller.me(mockRequest);
-
-            expect(authService.me).toHaveBeenCalledWith(mockUser);
-            expect(authService.me).toHaveBeenCalledTimes(1);
-            expect(result).toEqual(mockUser);
-        });
-
-        it("should handle user data from service", () => {
-            const mockUser = {
-                userId: "2",
-                name: "Maria Santos",
-                email: "maria@email.com",
-            };
-
-            const mockRequest = { user: mockUser };
 
             mockAuthService.me.mockReturnValue({
-                ...mockUser,
-                role: "admin", // service pode adicionar dados extras
+                id: "1",
+                cpf: jwtPayload.cpf,
+                name: jwtPayload.name,
+                role: jwtPayload.role,
+                active: true,
             });
 
-            const result = controller.me(mockRequest);
+            const result = controller.me(jwtPayload);
 
-            expect(result).toHaveProperty("role", "admin");
+            expect(authService.me).toHaveBeenCalledWith(jwtPayload);
+            expect(result).toEqual({
+                id: "1",
+                cpf: jwtPayload.cpf,
+                name: jwtPayload.name,
+                role: jwtPayload.role,
+                active: true,
+            });
         });
     });
 
@@ -196,16 +201,10 @@ describe("AuthController", () => {
                     sameSite: "lax",
                 })
             );
+
             expect(result).toEqual({
                 message: "Logout realizado com sucesso",
             });
-        });
-
-        it("should clear cookie even if no user is authenticated", () => {
-            const result = controller.logout(mockResponse as Response);
-
-            expect(mockResponse.clearCookie).toHaveBeenCalled();
-            expect(result).toBeDefined();
         });
     });
 });

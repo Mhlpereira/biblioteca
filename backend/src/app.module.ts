@@ -35,18 +35,33 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 
         TypeOrmModule.forRootAsync({
             inject: [ConfigService],
-            useFactory: (config: ConfigService) => ({
-                type: "mysql",
-                host: config.get<string>("DATABASE_HOST"),
-                port: config.get<number>("DATABASE_PORT"),
-                username: config.get<string>("DATABASE_USER"),
-                password: config.get<string>("DATABASE_PASSWORD"),
-                database: config.get<string>("DATABASE_NAME"),
-                entities: ["dist/**/*.entity.js"],
-                synchronize: false,
-                logging: config.get("NODE_ENV") !== "production",
-                namingStrategy: new SnakeNamingStrategy(),
-            }),
+            useFactory: (config: ConfigService) => {
+                const isTest = config.get<string>("NODE_ENV") === "test";
+
+                if (isTest) {
+                    return {
+                        type: "sqlite",
+                        database: ":memory:",
+                        entities: ["src/**/*.entity.ts"],
+                        synchronize: true,
+                        dropSchema: true, 
+                        logging: false,
+                    };
+                }
+
+                return {
+                    type: "mysql",
+                    host: config.get<string>("DATABASE_HOST"),
+                    port: config.get<number>("DATABASE_PORT"),
+                    username: config.get<string>("DATABASE_USER"),
+                    password: config.get<string>("DATABASE_PASSWORD"),
+                    database: config.get<string>("DATABASE_NAME"),
+                    entities: ["dist/**/*.entity.js"],
+                    synchronize: false,
+                    logging: config.get("NODE_ENV") !== "production",
+                    namingStrategy: new SnakeNamingStrategy(),
+                };
+            },
         }),
 
         BookModule,

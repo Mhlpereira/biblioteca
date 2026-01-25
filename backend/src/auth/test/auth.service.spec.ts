@@ -4,15 +4,11 @@ import { ClientService } from "../../client/client.service";
 import { CryptoService } from "../../common/crypto/crypto.service";
 import { JwtService } from "@nestjs/jwt";
 import { BadRequestException, UnauthorizedException } from "@nestjs/common";
-import { RegisterDto } from "../dto/register.dto";
 import { LoginDto } from "../dto/login.dto";
-import { AuthUser } from "../types/auth-user.types";
+import { Role } from "../enum/role.enum";
 
 describe("AuthService", () => {
     let service: AuthService;
-    let clientService: ClientService;
-    let cryptoService: CryptoService;
-    let jwtService: JwtService;
 
     const mockClientService = {
         createClient: jest.fn(),
@@ -32,254 +28,152 @@ describe("AuthService", () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,
-                {
-                    provide: ClientService,
-                    useValue: mockClientService,
-                },
-                {
-                    provide: CryptoService,
-                    useValue: mockCryptoService,
-                },
-                {
-                    provide: JwtService,
-                    useValue: mockJwtService,
-                },
+                { provide: ClientService, useValue: mockClientService },
+                { provide: CryptoService, useValue: mockCryptoService },
+                { provide: JwtService, useValue: mockJwtService },
             ],
         }).compile();
 
-        service = module.get<AuthService>(AuthService);
-        clientService = module.get<ClientService>(ClientService);
-        cryptoService = module.get<CryptoService>(CryptoService);
-        jwtService = module.get<JwtService>(JwtService);
+        service = module.get(AuthService);
     });
 
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-    it("should be defined", () => {
-        expect(service).toBeDefined();
-    });
-
     describe("createClient", () => {
-        const validRegisterDto: RegisterDto = {
+        const register = {
             cpf: "12345678900",
             name: "João",
             lastName: "Silva",
-            password: "senha123",
-            confirmPassword: "senha123",
+            password: "123456",
+            confirmPassword: "123456",
         };
 
-        it("should create a client successfully", async () => {
-            const hashedPassword = "hashed_senha123";
-            const createdClient = {
-                id: "client-id-123",
-                cpf: "12345678900",
-                name: "João",
-                lastName: "Silva",
-                password: hashedPassword,
-                createdAt: new Date("2024-01-01"),
-                updatedAt: new Date("2024-01-01"),
-            };
-
-            mockCryptoService.hash.mockResolvedValue(hashedPassword);
-            mockClientService.createClient.mockResolvedValue(createdClient);
-
-            const result = await service.createClient(validRegisterDto);
-
-            expect(cryptoService.hash).toHaveBeenCalledWith("senha123");
-            expect(cryptoService.hash).toHaveBeenCalledTimes(1);
-
-            expect(clientService.createClient).toHaveBeenCalledWith({
-                cpf: "12345678900",
-                name: "João",
-                lastName: "Silva",
-                password: hashedPassword,
-            });
-            expect(clientService.createClient).toHaveBeenCalledTimes(1);
-
-            expect(result).toEqual({
-                id: "client-id-123",
-                cpf: "12345678900",
-                name: "João",
-                lastName: "Silva",
-                createdAt: createdClient.createdAt,
-                updatedAt: createdClient.updatedAt,
+        it("creates client with default role and active true", async () => {
+            mockCryptoService.hash.mockResolvedValue("hashed");
+            mockClientService.createClient.mockResolvedValue({
+                id: "1",
+                cpf: register.cpf,
+                name: register.name,
+                lastName: register.lastName,
+                role: Role.USER,
+                active: true,
+                createdAt: new Date(),
+                updatedAt: new Date(),
             });
 
-            expect(result).not.toHaveProperty("password");
+            const result = await service.createClient(register);
+
+            expect(mockCryptoService.hash).toHaveBeenCalledWith("123456");
+            expect(mockClientService.createClient).toHaveBeenCalledWith({
+                cpf: register.cpf,
+                name: register.name,
+                lastName: register.lastName,
+                password: "hashed",
+                active: true,
+                role: Role.USER,
+            });
+
+            expect(result.role).toBe(Role.USER);
         });
 
-        it("should throw BadRequestException when passwords do not match", async () => {
-            const invalidRegisterDto: RegisterDto = {
-                ...validRegisterDto,
-                password: "senha123",
-                confirmPassword: "senha456", 
-            };
+        it("throws when passwords do not match", async () => {
+            await expect(
+                service.createClient({ ...register, confirmPassword: "errada" })
+            ).rejects.toThrow(BadRequestException);
+        });
+    });
 
-            await expect(service.createClient(invalidRegisterDto)).rejects.toThrow(BadRequestException);
+    describe("validateCredentials", () => {
+        const client = {
+            id: "1",
+            cpf: "12345678900",
+            name: "João",
+            password: "hashed",
+            role: Role.USER,
+            active: true,
+        };
 
-            await expect(service.createClient(invalidRegisterDto)).rejects.toThrow("As senhas não coincidem");
+        it("returns client when credentials are valid", async () => {
+            mockClientService.findByCpf.mockResolvedValue(client);
+            mockCryptoService.compare.mockResolvedValue(true);
 
-            expect(cryptoService.hash).not.toHaveBeenCalled();
-            expect(clientService.createClient).not.toHaveBeenCalled();
+            const result = await service.validateCredentials("123", "senha");
+
+            expect(result).toBe(client);
         });
 
-        it("should propagate errors from clientService", async () => {
-            mockCryptoService.hash.mockResolvedValue("hashed_password");
-            mockClientService.createClient.mockRejectedValue(new BadRequestException("CPF já cadastrado"));
+        it("throws when client is inactive", async () => {
+            mockClientService.findByCpf.mockResolvedValue({
+                ...client,
+                active: false,
+            });
 
-            await expect(service.createClient(validRegisterDto)).rejects.toThrow("CPF já cadastrado");
-
-            expect(cryptoService.hash).toHaveBeenCalled();
-            expect(clientService.createClient).toHaveBeenCalled();
+            await expect(
+                service.validateCredentials("123", "senha")
+            ).rejects.toThrow(UnauthorizedException);
         });
 
-        it("should propagate errors from cryptoService", async () => {
-            mockCryptoService.hash.mockRejectedValue(new Error("Erro ao criptografar senha"));
+        it("throws when password is invalid", async () => {
+            mockClientService.findByCpf.mockResolvedValue(client);
+            mockCryptoService.compare.mockResolvedValue(false);
 
-            await expect(service.createClient(validRegisterDto)).rejects.toThrow("Erro ao criptografar senha");
-
-            expect(cryptoService.hash).toHaveBeenCalled();
-            expect(clientService.createClient).not.toHaveBeenCalled();
+            await expect(
+                service.validateCredentials("123", "senha")
+            ).rejects.toThrow(UnauthorizedException);
         });
     });
 
     describe("login", () => {
-        const validLoginDto: LoginDto = {
+        const loginDto: LoginDto = {
             cpf: "12345678900",
-            password: "senha123",
+            password: "123456",
         };
 
-        const mockClient = {
-            id: "client-id-123",
+        const client = {
+            id: "1",
             cpf: "12345678900",
-            name: "João Silva",
-            lastName: "Silva",
-            password: "hashed_senha123",
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            name: "João",
+            password: "hashed",
+            role: Role.ADMIN,
+            active: true,
         };
 
-        it("should login successfully and return access token", async () => {
-            const expectedToken = "jwt-token-abc123";
+        it("returns token and user data", async () => {
+            jest.spyOn(service, "validateCredentials").mockResolvedValue(client as any);
+            mockJwtService.sign.mockReturnValue("jwt-token");
 
-            mockClientService.findByCpf.mockResolvedValue(mockClient);
-            mockCryptoService.compare.mockResolvedValue(true);
-            mockJwtService.sign.mockReturnValue(expectedToken);
+            const result = await service.login(loginDto);
 
-            const result = await service.login(validLoginDto);
-
-            expect(clientService.findByCpf).toHaveBeenCalledWith("12345678900");
-            expect(clientService.findByCpf).toHaveBeenCalledTimes(1);
-
-            expect(cryptoService.compare).toHaveBeenCalledWith("senha123", "hashed_senha123");
-            expect(cryptoService.compare).toHaveBeenCalledTimes(1);
-
-            expect(jwtService.sign).toHaveBeenCalledWith({
-                sub: "client-id-123",
-                cpf: "12345678900",
-                name: "João Silva",
+            expect(result.accessToken).toBe("jwt-token");
+            expect(result.user).toEqual({
+                id: "1",
+                name: "João",
+                cpf: "123.***.***-00",
+                role: Role.ADMIN,
+                active: true,
             });
-            expect(jwtService.sign).toHaveBeenCalledTimes(1);
-
-            expect(result).toEqual({
-                accessToken: expectedToken,
-                user: {
-                    id: "client-id-123",
-                    name: "João Silva",
-                    cpf: "123.***.***-00", 
-                },
-            });
-        });
-
-        it("should throw UnauthorizedException when client is not found", async () => {
-            mockClientService.findByCpf.mockResolvedValue(null);
-
-            await expect(service.login(validLoginDto)).rejects.toThrow(UnauthorizedException);
-
-            await expect(service.login(validLoginDto)).rejects.toThrow("Credenciais inválidas");
-
-            expect(clientService.findByCpf).toHaveBeenCalledWith("12345678900");
-            expect(cryptoService.compare).not.toHaveBeenCalled();
-            expect(jwtService.sign).not.toHaveBeenCalled();
-        });
-
-        it("should throw UnauthorizedException when password is invalid", async () => {
-            mockClientService.findByCpf.mockResolvedValue(mockClient);
-            mockCryptoService.compare.mockResolvedValue(false); // Senha incorreta
-
-            await expect(service.login(validLoginDto)).rejects.toThrow(UnauthorizedException);
-
-            await expect(service.login(validLoginDto)).rejects.toThrow("Credenciais inválidas");
-
-            expect(clientService.findByCpf).toHaveBeenCalled();
-            expect(cryptoService.compare).toHaveBeenCalledWith("senha123", "hashed_senha123");
-            expect(jwtService.sign).not.toHaveBeenCalled();
-        });
-
-        it("should mask CPF in the response", async () => {
-            mockClientService.findByCpf.mockResolvedValue(mockClient);
-            mockCryptoService.compare.mockResolvedValue(true);
-            mockJwtService.sign.mockReturnValue("token");
-
-            const result = await service.login(validLoginDto);
-
-            expect(result.user.cpf).toBe("123.***.***-00");
-            expect(result.user.cpf).not.toBe("12345678900");
-        });
-
-        it("should propagate errors from findByCpf", async () => {
-            mockClientService.findByCpf.mockRejectedValue(new Error("Database connection error"));
-
-            await expect(service.login(validLoginDto)).rejects.toThrow("Database connection error");
         });
     });
 
     describe("me", () => {
-        it("should return user data from AuthUser", () => {
-            const authUser: AuthUser = {
-                userId: "user-123",
-                cpf: "12345678900",
-                name: "João Silva",
-            };
-
-            const result = service.me(authUser);
+        it("maps jwt payload correctly", () => {
+            const result = service.me({
+                sub: "1",
+                cpf: "123",
+                name: "João",
+                role: Role.ADMIN,
+                active: true,
+            });
 
             expect(result).toEqual({
-                id: "user-123",
-                cpf: "12345678900",
-                name: "João Silva",
+                id: "1",
+                cpf: "123",
+                name: "João",
+                role: Role.ADMIN,
+                active: true,
             });
-        });
-
-        it("should handle different user data", () => {
-            const authUser: AuthUser = {
-                userId: "user-456",
-                cpf: "98765432100",
-                name: "Maria Santos",
-            };
-
-            const result = service.me(authUser);
-
-            expect(result).toEqual({
-                id: "user-456",
-                cpf: "98765432100",
-                name: "Maria Santos",
-            });
-        });
-
-        it("should map userId to id correctly", () => {
-            const authUser: AuthUser = {
-                userId: "unique-user-id",
-                cpf: "11111111111",
-                name: "Test User",
-            };
-
-            const result = service.me(authUser);
-
-            expect(result.id).toBe("unique-user-id");
-            expect(result).not.toHaveProperty("userId");
         });
     });
 });

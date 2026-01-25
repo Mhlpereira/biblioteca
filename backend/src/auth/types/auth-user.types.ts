@@ -5,4 +5,5 @@ export type AuthUser = {
   cpf: string;
   name: string;
   role: Role;
+  active:boolean;
 };
