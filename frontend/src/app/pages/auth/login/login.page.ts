@@ -11,7 +11,7 @@ import { LoginFormComponent } from '../../../components/forms/login-form/login-f
   templateUrl: './login.page.html',
   styleUrl: './login.css'
 })
-export class LoginPageComponent {
+export class LoginPage {
   private authService = inject(AuthService);
   private router = inject(Router);
 
