@@ -1,7 +1,13 @@
-import { Component, EventEmitter, Output, inject } from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { CommonModule } from "@angular/common";
-import { CreateBook } from "../../../core/model/book.models";
+
+export interface CreateBook {
+    title: string;
+    author: string;
+    quantity: number;
+    imageUrl: string;
+}
 
 @Component({
     selector: "app-create-book-modal",
@@ -9,27 +15,43 @@ import { CreateBook } from "../../../core/model/book.models";
     imports: [CommonModule, ReactiveFormsModule],
     templateUrl: "./create-book-modal.component.html",
 })
-export class CreateBookModalComponent {
+export class CreateBookModalComponent implements OnChanges {
     private fb = inject(FormBuilder);
 
-    @Output() close = new EventEmitter<void>();
+    @Input() book: CreateBook | null = null;
 
-    @Output() save = new EventEmitter<CreateBook>();
+    @Output() close = new EventEmitter<void>();
+    @Output() save = new EventEmitter<CreateBook>(); 
 
     form = this.fb.group({
         title: ["", Validators.required],
         author: ["", Validators.required],
-        quantity: [1, [Validators.min(1)]],
-        imageUrl: [""],
+        quantity: [1, [Validators.required, Validators.min(1)]], 
+        imageUrl: [""]
     });
 
-    onClose() {
-        this.close.emit();
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes["book"] && this.book) {
+            this.form.patchValue({
+                title: this.book.title,
+                author: this.book.author,
+                quantity: this.book.quantity,
+                imageUrl: this.book.imageUrl
+            });
+        } else {
+            this.form.reset({ 
+                title: "",
+                author: "",
+                imageUrl: "",
+                quantity: 1 
+            });
+        }
     }
 
-    onSubmit() {
+    submit() {
         if (this.form.valid) {
-            this.save.emit(this.form.value as CreateBook);
+            const formData = this.form.value as unknown as CreateBook;
+            this.save.emit(formData);
         }
     }
 }

@@ -3,111 +3,33 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">Catálogo de Livros</h1>
-                <p class="text-slate-500 text-sm">Explore nosso acervo e faça sua reserva.</p>
+                <p class="text-slate-500 text-sm">Clique em um livro para realizar uma reserva.</p>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <form
-                [formGroup]="searchForm"
-                (ngSubmit)="onSearch()"
-                class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
-            >
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sticky top-4 z-20">
+            <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                
                 <div class="md:col-span-5 relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg
-                            class="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                        </svg>
-                    </div>
-                    <input
-                        type="text"
-                        formControlName="title"
-                        placeholder="Buscar por título..."
-                        class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm placeholder-slate-400"
-                    />
+                    <input type="text" formControlName="title" placeholder="Buscar por título..." class="block w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"/>
                 </div>
-
+                
                 <div class="md:col-span-4 relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg
-                            class="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                        </svg>
-                    </div>
-                    <input
-                        type="text"
-                        formControlName="author"
-                        placeholder="Nome do autor..."
-                        class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm placeholder-slate-400"
-                    />
+                    <input type="text" formControlName="author" placeholder="Autor..." class="block w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"/>
                 </div>
-
-                <div class="md:col-span-2 flex items-center justify-center md:justify-start">
-                    <label class="inline-flex items-center cursor-pointer group">
-                        <div class="relative">
-                            <input type="checkbox" formControlName="onlyAvailable" class="sr-only peer" />
-                            <div
-                                class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
-                            ></div>
-                        </div>
-                        <span
-                            class="ml-3 text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors"
-                        >
-                            Apenas disponíveis
-                        </span>
-                    </label>
+                
+                <div class="md:col-span-2">
+                     <label class="flex items-center gap-2 text-sm text-slate-600">
+                        <input type="checkbox" formControlName="onlyAvailable"> Apenas disponíveis
+                     </label>
                 </div>
 
                 <div class="md:col-span-1">
-                    <button
-                        type="submit"
-                        [disabled]="isLoading"
-                        class="w-full flex items-center justify-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-all focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
+                    <button type="submit" [disabled]="isLoading" class="w-full flex items-center justify-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">
                         @if (isLoading) {
-                        <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                            ></circle>
-                            <path
-                                class="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                        </svg>
+                            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         } @else {
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M14 5l7 7m0 0l-7 7m7-7H3"
-                            />
-                        </svg>
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         }
                     </button>
                 </div>
@@ -116,27 +38,54 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @for (book of books; track book.id) {
-            <div class="bg-white rounded-lg shadow p-4">
-                <img [src]="book.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5MaXZybyI8L3RleHQ+PC9zdmc+'" class="h-48 w-full object-cover rounded mb-4" />
-                <h3 class="font-bold">{{ book.title }}</h3>
+            
+            <div 
+                (click)="openReservationModal(book)"
+                class="bg-white rounded-lg shadow p-4 cursor-pointer relative transition-all duration-200 group hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-blue-200"
+            >
+                <div class="relative overflow-hidden rounded mb-4">
+                    <img 
+                        [src]="book.imageUrl || 'https://placehold.co/200x300?text=Livro'" 
+                        class="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    />
+                    
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span class="bg-white text-blue-600 px-4 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                            Reservar
+                        </span>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                    {{ book.title }}
+                </h3>
                 <p class="text-sm text-gray-500">{{ book.author }}</p>
+
+                <div class="mt-3">
+                     @if (book.availableCopies > 0) {
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                            Disponível
+                        </span>
+                    } @else {
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">
+                            Esgotado
+                        </span>
+                    }
+                </div>
             </div>
             } @empty {
-            <div
-                class="col-span-full py-12 text-center text-slate-500 bg-white rounded-lg border border-dashed border-slate-300"
-            >
-                <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                </svg>
-                <p class="mt-2 text-lg font-medium">Nenhum livro encontrado</p>
-                <p class="text-sm">Tente ajustar os filtros da sua busca.</p>
-            </div>
+                <div class="col-span-full py-12 text-center text-slate-500">
+                    Nenhum livro encontrado.
+                </div>
             }
         </div>
     </div>
 </div>
+
+@if (selectedBook()) {
+    <app-create-reservation-modal
+        [book]="selectedBook()!"
+        (close)="closeReservationModal()"
+        (save)="handleCreateReservation($event)">
+    </app-create-reservation-modal>
+}

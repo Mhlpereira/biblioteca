@@ -7,6 +7,7 @@ import { BookCopyStatus } from "./enum/book-status.enum";
 import { Book } from "../book/entities/book.entity";
 import { AddBookCopyInput } from "./interface/add-copy.interface";
 import { RemoveCopy } from "./interface/remove-copy.interface";
+import { PaginatedResult } from "../common/interfaces/paginated.interface";
 
 @Injectable()
 export class BookCopyService {
@@ -67,19 +68,37 @@ export class BookCopyService {
     async findAvailableCopyByBookId(bookId: string) {
         const copyId = await this.bookCopyRepository.findOne({
             where: {
-                book: { id: bookId }, 
-                status: BookCopyStatus.AVAILABLE
+                book: { id: bookId },
+                status: BookCopyStatus.AVAILABLE,
             },
         });
 
-        if(!copyId){
+        if (!copyId) {
             throw new NotFoundException("Sem livros disponiveis");
         }
 
         return copyId;
     }
 
-    async updateStatus(copyId: string, AVAILABLE: BookCopyStatus){
+    async updateStatus(copyId: string, AVAILABLE: BookCopyStatus) {}
 
+    async findAllByBook(id: string): Promise<PaginatedResult<BookCopy>> {
+        const [data, total] = await this.bookCopyRepository.findAndCount({
+            where: {
+                book: { id: id },
+            },
+            relations: {
+                book: true,
+            },
+        });
+
+        return {
+            data: data,
+            meta: {
+                total: total,
+                page: 1, 
+                lastPage: 1, 
+            },
+        };
     }
 }

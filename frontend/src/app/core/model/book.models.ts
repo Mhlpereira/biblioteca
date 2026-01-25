@@ -24,3 +24,26 @@ export interface CreateBook{
     imageUrl: string;
 }
 
+export interface  AddCopy{
+    bookId: string;
+    quantity: number;
+}
+
+export interface RemoveCopy{
+    bookId: string;
+}
+
+export interface BookCopy {
+    id: string;
+    status: BookCopyStatus;
+    createdAt: string;      
+    updatedAt: string;
+    book?: Book;           
+}
+
+export enum BookCopyStatus {
+    AVAILABLE = 'AVAILABLE',
+    BORROWED = 'BORROWED',
+    LOST = 'LOST',
+    MAINTENANCE = 'MAINTENANCE'
+}

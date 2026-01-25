@@ -14,6 +14,7 @@
 
     @if (showCreateModal()) {
         <app-create-book-modal 
+            [book]="selectedBook()"
             (close)="closeCreateModal()" 
             (save)="handleCreateBook($event)"> 
         </app-create-book-modal>
@@ -68,10 +69,10 @@
             @if (activeTab() === 'inventory') {
                 <app-book-list 
                     [books]="books()"
-                    (addCopy)="handleAddCopy($event)"
-                    (removeCopy)="handleRemoveCopy($event)"
+                    (settings)="openSettings($event)"
+                    (editBook)="handleEditBook($event)"
                     (deleteBook)="handleDeleteBook($event)">
-                </app-book-list>
+                    </app-book-list>
             } 
             
             @if (activeTab() === 'overdue') {
@@ -121,3 +122,11 @@
         }
     </div>
 </div>
+
+@if (selectedBookForSettings()) {
+    <app-settings-book-modal
+        [book]="selectedBookForSettings()"
+        (close)="closeSettings()"
+        (refresh)="handleRefresh()">
+    </app-settings-book-modal>
+}

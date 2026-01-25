@@ -1,0 +1,19 @@
+<div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-red-50">
+            ...
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+            @for (res of reservations(); track res.id) {}
+        </tbody>
+    </table>
+</div>
+
+<app-pagination
+    [currentPage]="meta().page"
+    [lastPage]="meta().lastPage"
+    [total]="meta().total"
+    (pageChange)="loadData($event)"
+>
+</app-pagination>
+

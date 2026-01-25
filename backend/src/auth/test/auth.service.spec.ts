@@ -79,9 +79,9 @@ describe("AuthService", () => {
         });
 
         it("throws when passwords do not match", async () => {
-            await expect(
-                service.createClient({ ...register, confirmPassword: "errada" })
-            ).rejects.toThrow(BadRequestException);
+            await expect(service.createClient({ ...register, confirmPassword: "errada" })).rejects.toThrow(
+                BadRequestException
+            );
         });
     });
 
@@ -110,18 +110,14 @@ describe("AuthService", () => {
                 active: false,
             });
 
-            await expect(
-                service.validateCredentials("123", "senha")
-            ).rejects.toThrow(UnauthorizedException);
+            await expect(service.validateCredentials("123", "senha")).rejects.toThrow(UnauthorizedException);
         });
 
         it("throws when password is invalid", async () => {
             mockClientService.findByCpf.mockResolvedValue(client);
             mockCryptoService.compare.mockResolvedValue(false);
 
-            await expect(
-                service.validateCredentials("123", "senha")
-            ).rejects.toThrow(UnauthorizedException);
+            await expect(service.validateCredentials("123", "senha")).rejects.toThrow(UnauthorizedException);
         });
     });
 
@@ -168,11 +164,11 @@ describe("AuthService", () => {
             });
 
             expect(result).toEqual({
-                id: "1",
                 cpf: "123",
                 name: "João",
                 role: Role.ADMIN,
                 active: true,
+                sub: "1",
             });
         });
     });

@@ -5,7 +5,7 @@ import { User } from "../core/model/user.model";
 import { API_BASE_URL } from "../core/constants/api.constants";
 import { FindClientParams } from "../core/model/client.model";
 import { PaginatedResult } from "../core/model/pagination.model";
-import { Book, CreateBook, FindBooksQuery } from "../core/model/book.models";
+import { AddCopy, Book, CreateBook, FindBooksQuery, RemoveCopy } from "../core/model/book.models";
 import { Reservation } from "../core/model/reservation.model";
 
 @Injectable({
@@ -57,34 +57,15 @@ export class AdminService {
         });
     }
 
-    getBooks(query?: FindBooksQuery): Observable<PaginatedResult<Book>> {
-        let params = new HttpParams();
-
-        if (query) {
-            if (query.title) params = params.set("title", query.title);
-            if (query.author) params = params.set("author", query.author);
-            if (query.onlyAvailable) params = params.set("onlyAvailable", "true");
-        }
-
-        if (!params.has("page")) params = params.set("page", 1);
-        if (!params.has("limit")) params = params.set("limit", 10);
-
-        return this.http.get<PaginatedResult<Book>>(this.API_URL, { params });
-    }
-
     deactivateBook(id: string): Observable<void> {
         return this.http.patch<void>(`${this.API_URL}/books/${id}/deactivate`, {}, { withCredentials: true });
     }
 
-    addBookCopy(bookId: string, quantity: number): Observable<void> {
-        const body = { bookId, quantity };
-
-        return this.http.post<void>(`${this.API_URL}/books/${bookId}/copies`, body, { withCredentials: true });
+    addBookCopy(dto: AddCopy): Observable<void> {
+        return this.http.post<void>(`${this.API_URL}/books/${dto.bookId}/copies`, dto, { withCredentials: true });
     }
 
-    removeBookCopy(bookId: string, quantity: number): Observable<void> {
-        const body = { bookId, quantity };
-
-        return this.http.patch<void>(`${this.API_URL}/books/${bookId}/copies/remove`, body, { withCredentials: true });
+    removeBookCopy(dto: RemoveCopy): Observable<void> {
+        return this.http.patch<void>(`${this.API_URL}/books/${dto.bookId}/copies/remove`, dto, { withCredentials: true });
     }
 }

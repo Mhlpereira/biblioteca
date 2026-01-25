@@ -1,7 +1,7 @@
 import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
-import { FindBooksQuery, Book } from "../core/model/book.models"; // Importe o PaginatedResult
+import { FindBooksQuery, Book, BookCopy } from "../core/model/book.models"; // Importe o PaginatedResult
 import { API_BASE_URL } from "../core/constants/api.constants";
 import { PaginatedResult } from "../core/model/pagination.model";
 
@@ -25,5 +25,11 @@ export class BookService {
         if (!params.has("limit")) params = params.set("limit", 10);
 
         return this.http.get<PaginatedResult<Book>>(this.API_URL, { params });
+    }
+
+    getBookCopies(bookId: string): Observable<PaginatedResult<BookCopy>> {
+        return this.http.get<PaginatedResult<BookCopy>>(`${this.API_URL}/${bookId}/copies`, {
+            withCredentials: true,
+        });
     }
 }
