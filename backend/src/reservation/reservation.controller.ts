@@ -5,9 +5,8 @@ import { UpdateReservationDto } from "./dto/update-reservation.dto";
 import { FindReservationDto } from "./dto/find-reservation.dto";
 import { CurrentUser } from "../common/decorator/current-user.decorator";
 import { JwtPayload } from "../auth/types/jwt-payload.types";
-import { PaginationDto } from "../common/dto/pagination.dto";
-import { FindReservetaionResponseDto } from "./dto/find-response-reservation.dto";
 import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
+import { FindReservationResponseDto } from "./dto/find-response-reservation.dto";
 
 @Controller("reservation")
 export class ReservationController {
@@ -21,7 +20,7 @@ export class ReservationController {
 
     @Get()
     @HttpCode(200)
-    async findAllWithParameters(@Param() findReservationDto: FindReservationDto) {
+    async findAll(@Param() findReservationDto: FindReservationDto): Promise<PaginatedResponseDto<FindReservationResponseDto>>{
         return this.reservationService.findAll(findReservationDto);
     }
 
@@ -33,7 +32,7 @@ export class ReservationController {
 
     @Get("me")
     @HttpCode(200)
-    async findAuthClientReservations(@CurrentUser() user: JwtPayload): Promise<PaginatedResponseDto<FindReservetaionResponseDto>> {
+    async findAuthClientReservations(@CurrentUser() user: JwtPayload): Promise<PaginatedResponseDto<FindReservationResponseDto>> {
         return this.reservationService.findAuthClientReservation(user.sub);
     }
 
