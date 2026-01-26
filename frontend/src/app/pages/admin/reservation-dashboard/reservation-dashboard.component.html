@@ -1,0 +1,282 @@
+<div class="p-6 space-y-6 bg-slate-50 min-h-screen">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Dashboard de Reservas</h1>
+            <p class="text-slate-500">Gerencie e monitore empréstimos ativos</p>
+        </div>
+        <button
+            (click)="showCreateForm.set(true)"
+            class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg hover:bg-indigo-700 transition-all"
+        >
+            + Nova Reserva de Teste
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+            <p class="text-sm text-slate-500 font-medium">Total</p>
+            <p class="text-3xl font-bold text-slate-800">{{ stats().total }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-emerald-200">
+            <p class="text-sm text-emerald-600 font-medium">Ativas</p>
+            <p class="text-3xl font-bold text-emerald-700">{{ stats().active }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-red-200">
+            <p class="text-sm text-red-600 font-medium">Atrasadas</p>
+            <p class="text-3xl font-bold text-red-700">{{ stats().overdue }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border border-blue-200">
+            <p class="text-sm text-blue-600 font-medium">Devolvidas</p>
+            <p class="text-3xl font-bold text-blue-700">{{ stats().returned }}</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex gap-2 bg-white p-2 rounded-xl shadow-sm">
+        <button
+            (click)="setFilter('all')"
+            [class.bg-indigo-600]="activeFilter() === 'all'"
+            [class.text-white]="activeFilter() === 'all'"
+            [class.text-slate-600]="activeFilter() !== 'all'"
+            class="px-4 py-2 rounded-lg font-medium transition-all"
+        >
+            Todas
+        </button>
+        <button
+            (click)="setFilter('active')"
+            [class.bg-emerald-600]="activeFilter() === 'active'"
+            [class.text-white]="activeFilter() === 'active'"
+            [class.text-slate-600]="activeFilter() !== 'active'"
+            class="px-4 py-2 rounded-lg font-medium transition-all"
+        >
+            Ativas
+        </button>
+        <button
+            (click)="setFilter('overdue')"
+            [class.bg-red-600]="activeFilter() === 'overdue'"
+            [class.text-white]="activeFilter() === 'overdue'"
+            [class.text-slate-600]="activeFilter() !== 'overdue'"
+            class="px-4 py-2 rounded-lg font-medium transition-all"
+        >
+            Atrasadas
+        </button>
+        <button
+            (click)="setFilter('returned')"
+            [class.bg-blue-600]="activeFilter() === 'returned'"
+            [class.text-white]="activeFilter() === 'returned'"
+            [class.text-slate-600]="activeFilter() !== 'returned'"
+            class="px-4 py-2 rounded-lg font-medium transition-all"
+        >
+            Devolvidas
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+        <div class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+    }
+
+    <!-- Error State -->
+    @if (error() && !loading()) {
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+            <p class="font-medium">{{ error() }}</p>
+            <button 
+                (click)="loadReservations()" 
+                class="mt-2 text-sm underline hover:no-underline"
+            >
+                Tentar novamente
+            </button>
+        </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && reservations().length === 0 && !error()) {
+        <div class="bg-white rounded-xl p-12 text-center">
+            <div class="text-6xl mb-4">📚</div>
+            <h3 class="text-xl font-bold text-slate-700 mb-2">Nenhuma reserva encontrada</h3>
+            <p class="text-slate-500">Crie uma reserva de teste para começar</p>
+        </div>
+    }
+
+    <!-- Lista de Reservas -->
+    @if (!loading() && reservations().length > 0) {
+        <div class="grid grid-cols-1 gap-4">
+            @for (res of reservations(); track res.id) {
+                <div class="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+                    <div class="flex items-center justify-between gap-4">
+                        <!-- Livro Info -->
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-16 bg-slate-100 rounded overflow-hidden flex-shrink-0">
+                                @if (res.bookImage) {
+                                    <img [src]="res.bookImage" [alt]="res.bookTitle" class="w-full h-full object-cover" />
+                                } @else {
+                                    <div class="w-full h-full flex items-center justify-center text-slate-400 text-2xl">
+                                        📖
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-slate-800 truncate">{{ res.bookTitle }}</h3>
+                                <p class="text-sm text-slate-500">{{ res.clientName }}</p>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Reservado em {{ res.reservedAt | date: "dd/MM/yyyy" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Data de Vencimento -->
+                        <div class="text-center px-4">
+                            <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Vencimento</p>
+                            <p [class.text-red-600]="res.isOverdue" [class.font-bold]="res.isOverdue" class="font-mono">
+                                {{ res.dueDate | date: "dd/MM/yyyy" }}
+                            </p>
+                            @if (res.isOverdue && res.status !== 'RETURNED') {
+                                <p class="text-xs text-red-600 mt-1">
+                                    {{ getDaysOverdue(res.dueDate) }} dias de atraso
+                                </p>
+                            }
+                        </div>
+
+                        <!-- Status e Multa -->
+                        <div class="text-right min-w-[140px]">
+                            @if (res.status === 'RETURNED') {
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                                    DEVOLVIDO
+                                </span>
+                                @if (res.fineAmount && res.fineAmount > 0) {
+                                    <p class="text-sm text-slate-600 mt-1">
+                                        Multa paga: {{ res.fineAmount | currency: "BRL" }}
+                                    </p>
+                                }
+                            } @else if (res.isOverdue) {
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black animate-pulse">
+                                    ATRASADO
+                                </span>
+                                <p class="text-lg font-black text-red-600 mt-1">
+                                    {{ res.potentialFine || res.fineAmount | currency: "BRL" }}
+                                </p>
+                            } @else {
+                                <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">
+                                    NO PRAZO
+                                </span>
+                                <p class="text-sm text-slate-400 mt-1">Sem multas</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Paginação -->
+        <div class="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm">
+            <p class="text-sm text-slate-600">
+                Mostrando {{ (currentPage() - 1) * 10 + 1 }} - {{ Math.min(currentPage() * 10, total()) }} de {{ total() }} reservas
+            </p>
+            <div class="flex gap-2">
+                <button
+                    (click)="previousPage()"
+                    [disabled]="currentPage() === 1"
+                    [class.opacity-50]="currentPage() === 1"
+                    [class.cursor-not-allowed]="currentPage() === 1"
+                    class="px-4 py-2 bg-slate-100 rounded-lg font-medium hover:bg-slate-200 transition-all disabled:hover:bg-slate-100"
+                >
+                    Anterior
+                </button>
+                <div class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold">
+                    {{ currentPage() }} / {{ totalPages() }}
+                </div>
+                <button
+                    (click)="nextPage()"
+                    [disabled]="currentPage() === totalPages()"
+                    [class.opacity-50]="currentPage() === totalPages()"
+                    [class.cursor-not-allowed]="currentPage() === totalPages()"
+                    class="px-4 py-2 bg-slate-100 rounded-lg font-medium hover:bg-slate-200 transition-all disabled:hover:bg-slate-100"
+                >
+                    Próxima
+                </button>
+            </div>
+        </div>
+    }
+
+    <!-- Modal de Criação -->
+    @if (showCreateForm()) {
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+                <h2 class="text-xl font-bold mb-4">Criar Reserva de Teste</h2>
+                
+                <form [formGroup]="testForm" (ngSubmit)="createTestReservation()" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ID do Livro</label>
+                        <input
+                            formControlName="bookId"
+                            type="text"
+                            placeholder="ex: 123e4567-e89b-12d3-a456-426614174000"
+                            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            [class.border-red-300]="testForm.get('bookId')?.invalid && testForm.get('bookId')?.touched"
+                        />
+                        @if (testForm.get('bookId')?.invalid && testForm.get('bookId')?.touched) {
+                            <p class="text-xs text-red-600 mt-1">Campo obrigatório</p>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ID do Cliente</label>
+                        <input
+                            formControlName="clientId"
+                            type="text"
+                            placeholder="ex: 123e4567-e89b-12d3-a456-426614174001"
+                            class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            [class.border-red-300]="testForm.get('clientId')?.invalid && testForm.get('clientId')?.touched"
+                        />
+                        @if (testForm.get('clientId')?.invalid && testForm.get('clientId')?.touched) {
+                            <p class="text-xs text-red-600 mt-1">Campo obrigatório</p>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            <span class="text-red-600">Data de Vencimento</span>
+                            <span class="text-xs text-slate-500 block mt-1">
+                                💡 Escolha uma data passada para testar multas
+                            </span>
+                        </label>
+                        <input
+                            formControlName="dueDate"
+                            type="date"
+                            class="w-full border border-red-200 rounded-lg p-2 focus:ring-2 focus:ring-red-500 outline-none"
+                        />
+                    </div>
+
+                    @if (error()) {
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                            {{ error() }}
+                        </div>
+                    }
+
+                    <div class="flex gap-2 pt-4">
+                        <button
+                            type="button"
+                            (click)="showCreateForm.set(false); testForm.reset(); error.set(null)"
+                            class="flex-1 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            [disabled]="testForm.invalid"
+                            [class.opacity-50]="testForm.invalid"
+                            [class.cursor-not-allowed]="testForm.invalid"
+                            class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all disabled:hover:bg-indigo-600"
+                        >
+                            Criar Reserva
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>

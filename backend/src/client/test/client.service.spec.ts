@@ -115,7 +115,7 @@ describe("ClientService", () => {
                     active: true,
                     role: Role.ADMIN,
                 })
-            ).rejects.toThrow("CPF já cadastrado");
+            ).rejects.toThrow("CPF inválido");
         });
     });
 

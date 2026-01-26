@@ -31,6 +31,7 @@ export class BookService {
             id: book.id,
             title: book.title,
             author: book.author,
+            imageUrl: book.imageUrl,
             copies: copies.length,
         };
     }

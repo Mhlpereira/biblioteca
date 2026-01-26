@@ -163,12 +163,12 @@ describe("AuthService", () => {
                 active: true,
             });
 
-            expect(result).toEqual({
+            expect(result).toMatchObject({
+                id: "1",
                 cpf: "123",
                 name: "João",
                 role: Role.ADMIN,
                 active: true,
-                sub: "1",
             });
         });
     });

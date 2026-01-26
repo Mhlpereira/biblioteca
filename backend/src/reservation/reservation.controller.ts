@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, HttpCode, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, HttpCode, UseGuards, Query } from "@nestjs/common";
 import { ReservationService } from "./reservation.service";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
@@ -9,6 +9,10 @@ import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
 import { FindReservationResponseDto } from "./dto/find-response-reservation.dto";
 import { ReturnReservetionDto } from "./dto/return-reservation.dto";
 import { JwtAuthGuard } from "../auth/guard/jwt.guard";
+import { DenyRoles } from "../auth/decorators/roles.decorator";
+import { Role } from "../auth/enum/role.enum";
+import { CreateFullReservationDto } from "./dto/create-full-reservation.dto";
+import { Public } from "../auth/decorators/public.decorator";
 
 @Controller("reservation")
 export class ReservationController {
@@ -31,8 +35,9 @@ export class ReservationController {
 
     @Get()
     @HttpCode(200)
+    @Public()
     async findAll(
-        @Param() findReservationDto: FindReservationDto
+        @Query() findReservationDto: FindReservationDto
     ): Promise<PaginatedResponseDto<FindReservationResponseDto>> {
         return this.reservationService.findAll(findReservationDto);
     }
@@ -57,5 +62,13 @@ export class ReservationController {
     @HttpCode(204)
     async remove(@Param() params: ReturnReservetionDto): Promise<void> {
         return this.reservationService.remove(params.id);
+    }
+
+    @Post("create")
+    @HttpCode(201)
+    @DenyRoles(Role.USER)
+    async createFullreservation(@Body() dto: CreateFullReservationDto){
+        return this.reservationService.createFullReservation(dto);
+
     }
 }

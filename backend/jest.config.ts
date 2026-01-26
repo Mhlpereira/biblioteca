@@ -12,6 +12,9 @@ const config: Config = {
     collectCoverage: true,
     collectCoverageFrom: [
         "**/*.ts",
+        "!**/*.spec.ts",
+        "!**/*.e2e-spec.ts",
+        "!**/test/**",
         "!**/*.module.ts",
         "!**/main.ts",
         "!**/migrations/**",
@@ -20,6 +23,9 @@ const config: Config = {
         "!**/*.interface.ts",
         "!**/*.entity.ts",
         "!**/node_modules/**",
+        "!**/common/filter/**",
+        "!**/infra/database/seed/**",
+        "!**/common/decorator/**",
     ],
 
     coverageDirectory: "../coverage",

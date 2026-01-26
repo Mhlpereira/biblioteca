@@ -9,6 +9,7 @@ import { DenyRoles } from "../auth/decorators/roles.decorator";
 import { Role } from "../auth/enum/role.enum";
 import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
 import { BookListResponseDto } from "./dto/list-book-output.dto";
+import { Public } from "../auth/decorators/public.decorator";
 
 @Controller("books")
 export class BookController {

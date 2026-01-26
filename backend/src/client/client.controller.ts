@@ -10,6 +10,7 @@ import { Role } from "../auth/enum/role.enum";
 import { FindClientDto } from "./dto/find-client.dto";
 import { FindClientResponseDto } from "./dto/find-client-response.dto";
 import { PaginatedResponseDto } from "../common/dto/pagination-response.dto";
+import { Public } from "../auth/decorators/public.decorator";
 
 @Controller("clients")
 export class ClientController {

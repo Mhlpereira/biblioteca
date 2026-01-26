@@ -28,6 +28,5 @@ export class FindReservationDto extends PaginationDto{
     status?: ReservationStatus;
 
     @IsOptional()
-    @IsBoolean()
     overdueOnly?: boolean;
 }

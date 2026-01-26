@@ -35,11 +35,10 @@ export class ClientService {
         return this.clientRepository.save(client);
     }
 
-
     async findByIdorThrow(id: string): Promise<Client> {
         const client = await this.clientRepository.findOneBy({ id });
-        if(!client){
-            throw new NotFoundException("Cliente não encontrado.")
+        if (!client) {
+            throw new NotFoundException("Cliente não encontrado.");
         }
         return client;
     }
@@ -64,7 +63,7 @@ export class ClientService {
 
     async changePassword(id: string, data: UpdatePassword) {
         const client = await this.findByIdorThrow(id);
-        
+
         this.validatePassword(data.newPassword, data.confirmPassword);
 
         const isValid = await this.cryptoService.compare(data.currentPassword, client.password);
@@ -77,7 +76,7 @@ export class ClientService {
 
         await this.clientRepository.save(client);
 
-        return {message: "Senha alterada com sucesso!"};
+        return { message: "Senha alterada com sucesso!" };
     }
 
     async findAll(findClient: FindClient): Promise<PaginatedResult<ResponseFindClient>> {
@@ -97,7 +96,6 @@ export class ClientService {
                 "client.createdAt AS createdAt",
                 "client.updatedAt AS updatedAt",
             ]);
-
 
         if (findClient.cpf) {
             qb.andWhere("client.cpf LIKE :cpf", { cpf: `%${findClient.cpf}%` });
@@ -147,24 +145,25 @@ export class ClientService {
         };
     }
 
-    async toogleStatus(){}
+    async toogleStatus() {}
 
-    async deleteClient(id:string){
+    async deleteClient(id: string) {
         const client = await this.findByIdorThrow(id);
 
-        const {data: reservations} = await this.reservationService.findAuthClientReservation(client.id);
-        if(reservations){
-            for(const reservation of reservations){
-                await this.reservationService.remove(reservation.id)
+        const { data: reservations } = await this.reservationService.findAuthClientReservation(client.id);
+        if (reservations) {
+            for (const reservation of reservations) {
+                await this.reservationService.remove(reservation.id);
             }
         }
 
-        client.active = false
+        client.active = false;
+        await this.clientRepository.save(client);
     }
 
     private validateCpf(cpfValue: string) {
         if (!cpf.isValid(cpfValue)) {
-            throw new BadRequestException("CPF já cadastrado");
+            throw new BadRequestException("CPF inválido");
         }
     }
 
@@ -176,8 +175,8 @@ export class ClientService {
     }
 
     private validatePassword(newPassword: string, confirmPassword: string) {
-        if(newPassword !== confirmPassword){
-        throw new BadRequestException("As senhas não conferem");
+        if (newPassword !== confirmPassword) {
+            throw new BadRequestException("As senhas não conferem");
         }
     }
 }

@@ -9,4 +9,7 @@ export class BookCreateOutput{
     @ApiProperty({ example: "Douglas Adams" })
     author: string;
 
+    @ApiProperty({example:'http://xxxx.xxxx'})
+    imageUrl: string;
+
 }

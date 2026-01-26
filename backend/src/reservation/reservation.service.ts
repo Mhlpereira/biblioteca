@@ -13,6 +13,7 @@ import { BookCopyStatus } from "../book-copy/enum/book-status.enum";
 import { FindReservation } from "./interface/find-reservation.interface";
 import { PaginatedResult } from "../common/interfaces/paginated.interface";
 import { ReservationListResponse } from "./interface/reservation-list-response.interface";
+import { CreateFullReservation } from "./interface/create-full-reservation.interface";
 import { FINE_RULES } from "../common/constants/fine.constants";
 
 @Injectable()
@@ -35,8 +36,10 @@ export class ReservationService {
             id: ulid(),
             client,
             bookCopy,
-            reservedAt: Date.now(),
-            dueDate: createReservation.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            reservedAt: new Date(),
+            dueDate: createReservation.dueDate
+                ? new Date(createReservation.dueDate)
+                : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             status: ReservationStatus.ACTIVE,
         });
 
@@ -61,18 +64,16 @@ export class ReservationService {
             .leftJoin("reservation.client", "client")
             .leftJoin("reservation.bookCopy", "bookCopy")
             .leftJoin("bookCopy.book", "book")
-            .select([
-                "reservation.id AS id",
-                "client.name AS clientName",
-                "book.title AS bookTitle",
-                "book.imageUrl AS bookImage",
-                "book.author AS author",
-                "reservation.reservedAt AS reservedAt",
-                "reservation.dueDate AS dueDate",
-                "reservation.returnedAt AS returnedAt",
-                "reservation.status AS status",
-                "reservation.fineAmount AS fineAmount",
-            ]);
+            .select("reservation.id", "id")
+            .addSelect("client.name", "clientName")
+            .addSelect("book.title", "bookTitle")
+            .addSelect("book.imageUrl", "bookImage")
+            .addSelect("book.author", "author")
+            .addSelect("reservation.reservedAt", "reservedAt")
+            .addSelect("reservation.dueDate", "dueDate")
+            .addSelect("reservation.returnedAt", "returnedAt")
+            .addSelect("reservation.status", "status")
+            .addSelect("reservation.fineAmount", "fineAmount");
 
         if (findReservation.clientId) {
             qb.andWhere("client.id = :clientId", { clientId: findReservation.clientId });
@@ -83,15 +84,21 @@ export class ReservationService {
         }
 
         if (findReservation.reservedAt) {
-            qb.andWhere("reservation.reservedAt >= :reservedAt", { reservedAt: new Date(findReservation.reservedAt) });
+            qb.andWhere("reservation.reservedAt >= :reservedAt", {
+                reservedAt: new Date(findReservation.reservedAt),
+            });
         }
 
         if (findReservation.dueDate) {
-            qb.andWhere("reservation.dueDate <= :dueDate", { dueDate: new Date(findReservation.dueDate) });
+            qb.andWhere("reservation.dueDate <= :dueDate", {
+                dueDate: new Date(findReservation.dueDate),
+            });
         }
 
         if (findReservation.returnedAt) {
-            qb.andWhere("reservation.returnedAt <= :returnedAt", { returnedAt: new Date(findReservation.returnedAt) });
+            qb.andWhere("reservation.returnedAt <= :returnedAt", {
+                returnedAt: new Date(findReservation.returnedAt),
+            });
         }
 
         if (findReservation.status) {
@@ -103,29 +110,36 @@ export class ReservationService {
             qb.andWhere("reservation.status != :returned", { returned: ReservationStatus.RETURNED });
         }
 
-        const countQb = qb.clone().select("COUNT(*)", "total").getRawOne();
-        const total = (await countQb).total;
+        qb.orderBy("CASE WHEN reservation.dueDate < :now AND reservation.status != :returned THEN 0 ELSE 1 END", "ASC")
+            .addOrderBy("reservation.dueDate", "ASC")
+            .setParameter("now", new Date())
+            .setParameter("returned", ReservationStatus.RETURNED);
 
-        qb.take(limit).skip(skip);
+        const countQb = qb.clone();
+        const total = await countQb.getCount();
+
+        qb.limit(limit).offset(skip);
 
         const raw = await qb.getRawMany();
-
         const now = new Date();
 
         const data = raw.map(r => {
-            const isOverdue = r.status !== 'RETURNED' && new Date(r.duedate) < now;
-            const potentialFine = isOverdue ? this.calculateFineAmount(now.getTime() - new Date(r.duedate).getTime()) : undefined;
+            const dueDate = new Date(r.dueDate);
+            const isOverdue = r.status !== ReservationStatus.RETURNED && dueDate < now;
+
+            const diffTime = now.getTime() - dueDate.getTime();
+            const potentialFine = isOverdue ? this.calculateFineAmount(diffTime) : 0;
             return {
                 id: r.id,
-                clientName: r.clientname,
-                bookTitle: r.booktitle,
-                bookImage: r.bookImage,
+                clientName: r.clientName,
+                bookTitle: r.bookTitle,
+                bookImage: r.bookImage || null,
                 author: r.author,
-                reservedAt: r.reservedat,
-                dueDate: r.duedate,
-                returnedAt: r.returnedat,
+                reservedAt: r.reservedAt,
+                dueDate: r.dueDate,
+                returnedAt: r.returnedAt,
                 status: r.status,
-                fineAmount: r.fineamount,
+                fineAmount: r.fineAmount,
                 isOverdue,
                 potentialFine,
             };
@@ -211,6 +225,51 @@ export class ReservationService {
         return await this.reservatioRepository.save(reservation);
     }
 
+    async remove(id: string): Promise<void> {
+        const reservation = await this.reservatioRepository.findOneBy({ id });
+        if (!reservation) {
+            throw new NotFoundException(`Reserva com ID ${id} não encontrade`);
+        }
+        await this.reservatioRepository.remove(reservation);
+    }
+
+    async createFullReservation(reservation: CreateFullReservation) {
+        const client = await this.clientService.findByIdorThrow(reservation.clientId);
+
+        const bookCopy = await this.bookCopyService.findAvailableCopyByBookId(reservation.bookCopyId);
+        if (!bookCopy) {
+            throw new NotFoundException("Cópia do livro não encontrada");
+        }
+
+        const reservationDone = this.reservatioRepository.create({
+            id: ulid(),
+            client,
+            bookCopy,
+            reservedAt: reservation.reservedAt ? new Date(reservation.reservedAt) : new Date(),
+
+            dueDate: new Date(reservation.dueDate),
+
+            returnedAt: reservation.returnedAt ? new Date(reservation.returnedAt) : undefined,
+            status: reservation.status || ReservationStatus.ACTIVE,
+            daysLate: reservation.daysLate || 0,
+            fineAmount: reservation.fineAmount || 0,
+        });
+
+        await this.dataSource.transaction(async manager => {
+            await manager.save(reservationDone);
+            const newCopyStatus =
+                reservationDone.status === ReservationStatus.RETURNED
+                    ? BookCopyStatus.AVAILABLE
+                    : BookCopyStatus.RESERVED;
+
+            await manager.update(BookCopy, bookCopy.id, {
+                status: newCopyStatus,
+            });
+        });
+
+        return reservation;
+    }
+
     private calculateFine(reservation: Reservation, diffTime: number) {
         reservation.daysLate = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
@@ -221,13 +280,5 @@ export class ReservationService {
         const daysLate = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
         return FINE_RULES.FIXED_FINE + daysLate * FINE_RULES.DAILY_PERCENT;
-    }
-
-    async remove(id: string): Promise<void> {
-        const reservation = await this.reservatioRepository.findOneBy({ id });
-        if (!reservation) {
-            throw new NotFoundException(`Reserva com ID ${id} não encontrade`);
-        }
-        await this.reservatioRepository.remove(reservation);
     }
 }
