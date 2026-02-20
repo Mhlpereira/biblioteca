@@ -8,6 +8,9 @@ export class Client{
     @PrimaryColumn({ type: 'varchar', length: 26 })
     id: string;
 
+    @Column({unique: true})
+    keycloakId: string;
+
     @Column({unique:true, length: 11})
     cpf: string;
 
@@ -16,9 +19,6 @@ export class Client{
 
     @Column()
     lastName: string;
-
-    @Column()
-    password: string;
 
     @Column({default: true})
     active: boolean;

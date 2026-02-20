@@ -1,4 +1,3 @@
-
 name: biblioteca-stack
 
 networks:
@@ -14,58 +13,104 @@ volumes:
   es_data:
   kafka_data:
   zookeeper_data:
+  zookeeper_log:
+  kong_db_data:
 
 services:
   frontend:
     build:
       context: ./frontend
-    container_name: frontend
     environment:
-      KONG_BASE_URL: "http://kong:8000"
-      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/am"
+      KONG_BASE_URL: "http://localhost:8000"
+      KEYCLOAK_ISSUER: "http://localhost:8081/realms/biblioteca"
       KEYCLOAK_CLIENT_ID: "frontend"
     ports:
-      - "8080:80"   
+      - "8080:80"
     depends_on:
-      - kong
+      kong:
+        condition: service_started
     networks:
       - public
       - internal
 
-  kong:
-    image: kong:3.6
-    container_name: kong
+  kong-db:
+    image: postgres:16
     environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: "/kong/declarative/kong.yml"
-      KONG_PROXY_LISTEN: "0.0.0.0:8000"
-      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
-      # Logs em stdout
-      KONG_LOG_LEVEL: "info"
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong_pass
     volumes:
-      - ./kong/kong.yml:/kong/declarative/kong.yml:ro
-    depends_on:
-      - backend
-      - keycloak
+      - kong_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - internal
 
+  kong-migrations:
+    image: kong:3.6
+    command: ["kong", "migrations", "bootstrap"]
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_pass
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    networks:
+      - internal
+  kong:
+    build:
+      context: ./kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_DATABASE: kong
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong_pass
+
+      KONG_PLUGINS: "bundled,oidc"
+
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_LOG_LEVEL: "info"
+    depends_on:
+      kong-db:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    networks:
+      - internal
 
   konga-db:
     image: postgres:16
-    container_name: konga-db
     environment:
       POSTGRES_DB: konga
       POSTGRES_USER: konga
       POSTGRES_PASSWORD: konga_pass
     volumes:
       - postgres_konga_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U konga -d konga"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - internal
 
   konga:
     image: pantsel/konga:latest
-    container_name: konga
     environment:
       DB_ADAPTER: "postgres"
       DB_HOST: "konga-db"
@@ -75,26 +120,34 @@ services:
       DB_DATABASE: "konga"
       NODE_ENV: "production"
     depends_on:
-      - kong
-      - konga-db
+      konga-db:
+        condition: service_healthy
+      kong:
+        condition: service_started
+    ports:
+      - "1337:1337"
     networks:
       - internal
+      - public
 
   keycloak-db:
     image: postgres:16
-    container_name: keycloak-db
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak_pass
     volumes:
       - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak -h 127.0.0.1 -p 5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - internal
 
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
-    container_name: keycloak
     command: ["start-dev"]
     environment:
       KC_DB: postgres
@@ -107,78 +160,93 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: "xforwarded"
     depends_on:
-      - keycloak-db
+      keycloak-db:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     networks:
       - internal
+      - public
 
   backend:
     build:
       context: ./backend
-    container_name: backend
     environment:
-      # exemplo
       NODE_ENV: production
       ELASTIC_URL: "http://elasticsearch:9200"
       KAFKA_BROKERS: "kafka:9092"
-      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/am"
+      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/biblioteca"
+      KC_ADMIN_CLIENT_SECRET: "RPYi3WGSfrTFhVbO2OpmjcCROgWtxSG8"
     depends_on:
-      - kafka
-      - elasticsearch
+      kafka:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+    expose:
+      - "3000"
     networks:
       - internal
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
-    container_name: elasticsearch
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
     volumes:
       - es_data:/usr/share/elasticsearch/data
+    expose:
+      - "9200"
     networks:
       - internal
 
-
   logstash:
     image: docker.elastic.co/logstash/logstash:8.13.4
-    container_name: logstash
     environment:
-      - xpack.monitoring.enabled=false
-      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      xpack.monitoring.enabled: "false"
+      LS_JAVA_OPTS: "-Xms512m -Xmx512m"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
     depends_on:
-      - kafka
-      - elasticsearch
+      kafka:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
     networks:
       - internal
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
-    container_name: zookeeper
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
-      - zookeeper_data:/var/lib/zookeeper/log
+      - zookeeper_log:/var/lib/zookeeper/log
     networks:
       - internal
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
-    container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_started
     environment:
-      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_ID: "1"
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092"
       KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
       - internal
-    # Sem ports
