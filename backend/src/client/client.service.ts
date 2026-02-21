@@ -12,6 +12,7 @@ import { ReservationService } from "../reservation/reservation.service";
 import { FindClient } from "./interface/find-client.interface";
 import { PaginatedResult } from "../common/interfaces/paginated.interface";
 import { ResponseFindClient } from "./interface/response-find-client.interface";
+import { KeycloakService } from "../auth/keycloack.service";
 
 @Injectable()
 export class ClientService {
@@ -19,6 +20,7 @@ export class ClientService {
         @InjectRepository(Client)
         private readonly clientRepository: Repository<Client>,
         private readonly cryptoService: CryptoService,
+        private readonly keycloackService: KeycloakService,
         @Inject(forwardRef(() => ReservationService))
         private readonly reservationService: ReservationService
     ) {}
@@ -27,8 +29,11 @@ export class ClientService {
         this.validateCpf(createClient.cpf);
         await this.verifyUniqueCpf(createClient.cpf);
 
+        const keycloakId = await this.keycloackService.createUser(createClient)
+
         const client = this.clientRepository.create({
             id: ulid(),
+            keycloakId,
             ...createClient,
         });
 

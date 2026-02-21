@@ -7,11 +7,14 @@ import { ClientModule } from '../client/client.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './guard/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { HttpModule } from '@nestjs/axios';
+import { KeycloakService } from './keycloack.service';
 
 @Module({
   imports: [
     CryptoModule, 
     ClientModule,
+    HttpModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -26,6 +29,6 @@ import { PassportModule } from '@nestjs/passport';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtModule, PassportModule] 
+  exports: [AuthService, JwtModule, PassportModule, KeycloakService] 
 })
 export class AuthModule {}
