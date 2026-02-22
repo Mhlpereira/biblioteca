@@ -1,8 +1,6 @@
-import { Component, EventEmitter, Input, Output, inject } from "@angular/core"; // <--- Adicione Input e Output
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { Component, EventEmitter, Input, Output, inject } from "@angular/core";
+import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { NgxMaskDirective } from "ngx-mask";
-import { LoginRequest } from "../../../core/model/auth.models";
-import { PasswordValidator } from "../../../shared/validators/password.validator";
 
 @Component({
     selector: "app-login-form",
@@ -16,7 +14,8 @@ export class LoginFormComponent {
     @Input() isLoading = false;
     @Input() errorMessage = "";
 
-    @Output() loginSubmit = new EventEmitter<LoginRequest>();
+    // ✅ agora não envia credenciais
+    @Output() loginSubmit = new EventEmitter<void>();
 
     showPassword = false;
 
@@ -25,19 +24,11 @@ export class LoginFormComponent {
     }
 
     form = this.fb.group({
-        cpf: ["", [Validators.required]],
-        password: ["", [Validators.required, Validators.minLength(8), PasswordValidator.strength]],
+        cpf: [""],
+        password: [""],
     });
 
     onSubmit() {
-        if (this.form.valid) {
-            const request: LoginRequest = {
-                cpf: this.form.value.cpf!,
-                password: this.form.value.password!,
-            };
-            this.loginSubmit.emit(request);
-        } else {
-            this.form.markAllAsTouched();
-        }
+        this.loginSubmit.emit();
     }
 }

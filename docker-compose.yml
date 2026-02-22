@@ -15,15 +15,12 @@ volumes:
   zookeeper_data:
   zookeeper_log:
   kong_db_data:
+  mysql_data:
 
 services:
   frontend:
     build:
       context: ./frontend
-    environment:
-      KONG_BASE_URL: "http://localhost:8000"
-      KEYCLOAK_ISSUER: "http://localhost:8081/realms/biblioteca"
-      KEYCLOAK_CLIENT_ID: "frontend"
     ports:
       - "8080:80"
     depends_on:
@@ -63,6 +60,7 @@ services:
         condition: service_healthy
     networks:
       - internal
+
   kong:
     build:
       context: ./kong
@@ -72,9 +70,7 @@ services:
       KONG_PG_DATABASE: kong
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: kong_pass
-
-      KONG_PLUGINS: "bundled,oidc"
-
+      KONG_PLUGINS: "bundled"
       KONG_PROXY_LISTEN: "0.0.0.0:8000"
       KONG_ADMIN_LISTEN: "0.0.0.0:8001"
       KONG_LOG_LEVEL: "info"
@@ -92,9 +88,11 @@ services:
       - "8001:8001"
     networks:
       - internal
+      - public
 
+  # KONGA 
   konga-db:
-    image: postgres:16
+    image: postgres:11
     environment:
       POSTGRES_DB: konga
       POSTGRES_USER: konga
@@ -109,8 +107,29 @@ services:
     networks:
       - internal
 
+  konga-prepare:
+    image: pantsel/konga:latest
+    depends_on:
+      konga-db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: "production"
+      TOKEN_SECRET: "uma-chave-bem-grande-aqui"
+    entrypoint: ["node", "/app/bin/konga.js"]
+    command: ["prepare", "--adapter", "postgres", "--uri", "postgresql://konga:konga_pass@konga-db:5432/konga"]
+    networks:
+      - internal
+    restart: "no"
+
   konga:
     image: pantsel/konga:latest
+    depends_on:
+      konga-db:
+        condition: service_healthy
+      konga-prepare:
+        condition: service_completed_successfully
+      kong:
+        condition: service_started
     environment:
       DB_ADAPTER: "postgres"
       DB_HOST: "konga-db"
@@ -119,17 +138,14 @@ services:
       DB_PASSWORD: "konga_pass"
       DB_DATABASE: "konga"
       NODE_ENV: "production"
-    depends_on:
-      konga-db:
-        condition: service_healthy
-      kong:
-        condition: service_started
+      TOKEN_SECRET: "uma-chave-bem-grande-aqui"
     ports:
       - "1337:1337"
     networks:
       - internal
       - public
 
+  # KEYCLOAK
   keycloak-db:
     image: postgres:16
     environment:
@@ -159,6 +175,8 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: "xforwarded"
+      KC_HOSTNAME_URL: "http://localhost:8081"
+      KC_HOSTNAME_ADMIN_URL: "http://localhost:8081"
     depends_on:
       keycloak-db:
         condition: service_healthy
@@ -173,6 +191,7 @@ services:
       - internal
       - public
 
+  # BACKEND
   backend:
     build:
       context: ./backend
@@ -180,9 +199,24 @@ services:
       NODE_ENV: production
       ELASTIC_URL: "http://elasticsearch:9200"
       KAFKA_BROKERS: "kafka:9092"
-      KEYCLOAK_ISSUER: "http://keycloak:8080/realms/biblioteca"
+
+      DATABASE_HOST: "mysql"
+      DATABASE_PORT: "3306"
+      DATABASE_USER: "user"
+      DATABASE_PASSWORD: "password"
+      DATABASE_NAME: "biblioteca"
+
+      KEYCLOAK_BASE_URL: "http://keycloak:8080"
+      KEYCLOAK_REALM: "biblioteca"
+      KEYCLOAK_ISSUER: "http://localhost:8081/realms/biblioteca"
+      KEYCLOAK_JWKS_URI: "http://keycloak:8080/realms/biblioteca/protocol/openid-connect/certs"
+      KEYCLOAK_CLIENT_ID: "frontend"
+
+      KC_ADMIN_CLIENT_ID: "backend"
       KC_ADMIN_CLIENT_SECRET: "RPYi3WGSfrTFhVbO2OpmjcCROgWtxSG8"
     depends_on:
+      mysql:
+        condition: service_healthy
       kafka:
         condition: service_started
       elasticsearch:
@@ -194,6 +228,30 @@ services:
     networks:
       - internal
 
+  # MYSQL
+  mysql:
+    image: mysql:8.0
+    container_name: biblioteca-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: biblioteca
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - internal
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  # ELASTIC / LOGSTASH
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
     environment:
@@ -222,6 +280,7 @@ services:
     networks:
       - internal
 
+  # KAFKA / ZOOKEEPER
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
     environment:

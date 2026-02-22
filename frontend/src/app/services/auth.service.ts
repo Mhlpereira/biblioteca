@@ -1,48 +1,41 @@
+import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { LoginRequest, RegisterRequest } from "../core/model/auth.models";
-import { UserStore } from "../core/stores/user.store";
-import { User } from "../core/model/user.model";
-import { catchError, finalize, Observable, tap } from "rxjs";
+import { firstValueFrom } from "rxjs";
 import { API_BASE_URL } from "../core/constants/api.constants";
+import { User } from "../core/model/user.model";
+import { UserStore } from "../core/stores/user.store";
+import { keycloak } from "../core/interceptors/auth.interceptor";
 
-@Injectable({
-    providedIn: "root",
-})
+@Injectable({ providedIn: "root" })
 export class AuthService {
     private http = inject(HttpClient);
     private userStore = inject(UserStore);
     private readonly API_URL = API_BASE_URL;
 
-    login(credentials: LoginRequest) {
-        return this.http.post<User>(`${this.API_URL}/auth/login`, credentials, { withCredentials: true }).pipe(
-            tap(user => {
-                this.userStore.setUser(user);
-            })
-        );
+    login(): Promise<void> {
+        return keycloak.login({ redirectUri: window.location.origin + "/" });
     }
 
-    logout() {
-        return this.http.post<void>(`${this.API_URL}/auth/logout`, {}, { withCredentials: true }).pipe(
-            finalize(() => {
-                this.userStore.logout();
-            })
-        );
+    logout(): Promise<void> {
+        this.userStore.logout();
+        return keycloak.logout({ redirectUri: window.location.origin + "/login" });
     }
 
-    getProfile(): Observable<User> {
-        return this.http.get<User>(`${this.API_URL}/auth/me`, { withCredentials: true }).pipe(
-            tap(user => {
-                this.userStore.setUser(user);
-            }),
-            catchError(err => {
-                this.userStore.logout();
-                throw err;
-            })
-        );
+    getProfile() {
+        return this.http.get<User>(`${this.API_URL}/auth/me`);
     }
 
-    register(data: RegisterRequest) {
-        return this.http.post<void>(`${this.API_URL}/auth/register`, data);
+    async loadMe(): Promise<void> {
+        try {
+            const user = await firstValueFrom(this.getProfile());
+            this.userStore.setUser(user);
+            console.log("Usuário carregado:", user); // ← adicione
+        } catch (err) {
+            console.error("Erro ao carregar usuário:", err); // ← adicione
+        }
+    }
+    
+    register(data: any) {
+        return this.http.post(`${this.API_URL}/auth/register`, data);
     }
 }

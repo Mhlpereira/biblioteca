@@ -1,24 +1,17 @@
-import { inject } from "@angular/core";
-import { Router, CanActivateFn } from "@angular/router";
-import { UserStore } from "../stores/user.store";
-import { AuthService } from "../../services/auth.service";
-import { catchError, map, of } from "rxjs";
+import { CanActivateFn } from "@angular/router";
+import { keycloak } from "../interceptors/auth.interceptor";
 
-export const authGuard: CanActivateFn = (route, state) => {
-    const router = inject(Router);
-    const userStore = inject(UserStore);
-    const authService = inject(AuthService);
-
-    if (userStore.isAuthenticated()) {
-        return true; 
-    }
-
-    return authService.getProfile().pipe(
-        map((user) => {
+export const authGuard: CanActivateFn = async (route, state) => {
+    try {
+        if (keycloak.authenticated) {
+            await keycloak.updateToken(10); 
             return true;
-        }),
-        catchError(() => {
-            return of(router.createUrlTree(["/"]));
-        })
-    );
-}
+        }
+    } catch {}
+
+    await keycloak.login({
+        redirectUri: window.location.origin + state.url, 
+    });
+
+    return false;
+};

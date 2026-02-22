@@ -26,16 +26,7 @@ export class ClientController {
     async update(@CurrentUser() user: JwtPayload, @Body() updateClientDto: UpdateClientDto) {
         return this.clientService.update(user.sub, updateClientDto);
     }
-    
-    @Patch("me/password")
-    @HttpCode(204)
-    @ApiOperation({ summary: "Change authenticated client password" })
-    @ApiResponse({ status: 204, description: "Password changed successfully" })
-    @ApiResponse({ status: 400, description: "Current password is invalid" })
-    @ApiResponse({ status: 401, description: "Unauthorized" })
-    async changePassword(@CurrentUser() user: JwtPayload, @Body() updatePasswordDto: UpdatePasswordDto) {
-        return this.clientService.changePassword(user.sub, updatePasswordDto);
-    }
+
     
     @Delete("me")
     @HttpCode(204)

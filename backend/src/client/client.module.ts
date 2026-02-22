@@ -8,7 +8,7 @@ import { ReservationModule } from '../reservation/reservation.module';
 import { KeycloakService } from '../auth/keycloack.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Client]), CryptoModule, forwardRef(() => ReservationModule), KeycloakService],
+  imports: [TypeOrmModule.forFeature([Client]), CryptoModule, forwardRef(() => ReservationModule)],
   controllers: [ClientController],
   providers: [ClientService],
   exports: [ClientService],

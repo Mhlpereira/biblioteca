@@ -28,7 +28,7 @@ import { KeycloakService } from './keycloack.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, KeycloakService],
   exports: [AuthService, JwtModule, PassportModule, KeycloakService] 
 })
 export class AuthModule {}

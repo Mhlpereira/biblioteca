@@ -26,9 +26,8 @@ export class KeycloakService {
         return res.data.access_token;
     }
 
-    async createUser(input: { cpf: string; password: string; name: string; lastName: string }) {
+    async createUser(input: { cpf: string; email: string; name: string; lastName: string }) {
         const token = await this.adminToken();
-
         const createUrl = `${this.base}/admin/realms/${this.realm}/users`;
 
         try {
@@ -38,6 +37,8 @@ export class KeycloakService {
                     {
                         username: input.cpf,
                         enabled: true,
+                        email: input.email,
+                        emailVerified: false,
                         firstName: input.name,
                         lastName: input.lastName,
                     },
@@ -47,15 +48,6 @@ export class KeycloakService {
 
             const location = res.headers["location"];
             const userId = (location as string).split("/").pop();
-
-            await firstValueFrom(
-                this.http.put(
-                    `${this.base}/admin/realms/${this.realm}/users/${userId}/reset-password`,
-                    { type: "password", value: input.password, temporary: false },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                )
-            );
-
             return userId;
         } catch (e: any) {
             if (e?.response?.status === 409) throw new ConflictException("CPF já cadastrado no Keycloak.");

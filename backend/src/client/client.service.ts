@@ -7,12 +7,10 @@ import { CreateClient } from "./interface/create-client.interface";
 import { ulid } from "ulid";
 import { UpdateClient } from "./interface/update-client.interface";
 import { CryptoService } from "../common/crypto/crypto.service";
-import { UpdatePassword } from "./interface/update-password.interface";
 import { ReservationService } from "../reservation/reservation.service";
 import { FindClient } from "./interface/find-client.interface";
 import { PaginatedResult } from "../common/interfaces/paginated.interface";
 import { ResponseFindClient } from "./interface/response-find-client.interface";
-import { KeycloakService } from "../auth/keycloack.service";
 
 @Injectable()
 export class ClientService {
@@ -20,20 +18,16 @@ export class ClientService {
         @InjectRepository(Client)
         private readonly clientRepository: Repository<Client>,
         private readonly cryptoService: CryptoService,
-        private readonly keycloackService: KeycloakService,
         @Inject(forwardRef(() => ReservationService))
         private readonly reservationService: ReservationService
     ) {}
 
     async createClient(createClient: CreateClient) {
         this.validateCpf(createClient.cpf);
-        await this.verifyUniqueCpf(createClient.cpf);
-
-        const keycloakId = await this.keycloackService.createUser(createClient)
+        await this.verifyUniqueEmail(createClient.cpf);
 
         const client = this.clientRepository.create({
             id: ulid(),
-            keycloakId,
             ...createClient,
         });
 
@@ -48,8 +42,8 @@ export class ClientService {
         return client;
     }
 
-    async findByCpf(cpf: string): Promise<Client | null> {
-        return await this.clientRepository.findOneBy({ cpf });
+    async findByEmail(email: string): Promise<Client | null> {
+        return await this.clientRepository.findOneBy({ email });
     }
 
     async update(id: string, data: UpdateClient) {
@@ -66,22 +60,10 @@ export class ClientService {
         return this.clientRepository.save(client);
     }
 
-    async changePassword(id: string, data: UpdatePassword) {
-        const client = await this.findByIdorThrow(id);
-
-        this.validatePassword(data.newPassword, data.confirmPassword);
-
-        const isValid = await this.cryptoService.compare(data.currentPassword, client.password);
-
-        if (!isValid) {
-            throw new BadRequestException("Senha atual inválida");
-        }
-
-        client.password = await this.cryptoService.hash(data.newPassword);
-
-        await this.clientRepository.save(client);
-
-        return { message: "Senha alterada com sucesso!" };
+    async findByKeycloakId(keycloakId: string): Promise<Client | null> {
+        return this.clientRepository.findOne({
+            where: { keycloakId },
+        });
     }
 
     async findAll(findClient: FindClient): Promise<PaginatedResult<ResponseFindClient>> {
@@ -172,8 +154,8 @@ export class ClientService {
         }
     }
 
-    private async verifyUniqueCpf(cpfValue: string) {
-        const exists = await this.clientRepository.findOneBy({ cpf: cpfValue });
+    private async verifyUniqueEmail(email: string) {
+        const exists = await this.clientRepository.findOneBy({ email: email });
         if (exists) {
             throw new BadRequestException("CPF já cadastrado");
         }

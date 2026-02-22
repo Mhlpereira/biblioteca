@@ -11,7 +11,10 @@ export class Client{
     @Column({unique: true})
     keycloakId: string;
 
-    @Column({unique:true, length: 11})
+    @Column({unique:true})
+    email: string;
+
+    @Column({unique:true})
     cpf: string;
 
     @Column()

@@ -82,7 +82,9 @@ export class SettingsPage implements OnInit {
             this.isLoading = true;
             this.clientService.deleteAccount().subscribe({
                 next: () => {
-                    this.authService.logout().subscribe();
+                    this.authService.logout()
+                        .then(() => {})
+                        .catch(() => {});
                 },
                 error: () => {
                     this.isLoading = false;

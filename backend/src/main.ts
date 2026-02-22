@@ -10,17 +10,16 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     app.use(cookieParser());
-    app.setGlobalPrefix("api");
 
     app.useLogger(app.get(Logger));
 
     app.useGlobalFilters(new AllExceptionsFilter());
 
     app.enableCors({
-        origin: "http://localhost:4200",
-        methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+        origin: true,
         credentials: true,
         allowedHeaders: "Content-Type, Accept, Authorization",
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
     });
 
     app.useGlobalPipes(
@@ -42,6 +41,8 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api/docs", app, document);
 
-    await app.listen(process.env.PORT ?? 3000);
+    const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+    await app.listen(port, "0.0.0.0");
+    console.log(`Listening on http://0.0.0.0:${port}`);
 }
 bootstrap();

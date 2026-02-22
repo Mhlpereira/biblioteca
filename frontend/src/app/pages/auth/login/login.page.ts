@@ -26,20 +26,16 @@ export class LoginPage implements OnInit {
         }
     }
 
-    handleLogin(credentials: LoginRequest) {
+    async handleLogin() {
         this.isLoading = true;
         this.errorMessage = "";
 
-        this.authService.login(credentials).subscribe({
-            next: () => {
-                this.isLoading = false;
-                this.router.navigate(["/dashboard"]);
-            },
-            error: err => {
-                this.isLoading = false;
-                this.errorMessage = "CPF ou senha incorretos.";
-                console.error(err);
-            },
-        });
+        try {
+            await this.authService.login();
+        } catch (err) {
+            this.isLoading = false;
+            this.errorMessage = "Não foi possível iniciar o login.";
+            console.error(err);
+        }
     }
 }
