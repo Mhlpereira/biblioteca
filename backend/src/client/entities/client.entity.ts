@@ -1,21 +1,19 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import { Role } from "../../auth/enum/role.enum";
 
-
 @Entity()
-export class Client{
-
-    @PrimaryColumn({ type: 'varchar', length: 26 })
+export class Client {
+    @PrimaryColumn({ type: "varchar", length: 26 })
     id: string;
 
-    @Column({unique: true})
+    @Column({ unique: true })
     keycloakId: string;
 
-    @Column({unique:true})
+    @Column({ unique: true })
     email: string;
 
-    @Column({unique:true})
-    cpf: string;
+    @Column({ type: 'varchar',unique: true, nullable: true, default: null })
+    cpf: string | null;
 
     @Column()
     name: string;
@@ -23,10 +21,10 @@ export class Client{
     @Column()
     lastName: string;
 
-    @Column({default: true})
+    @Column({ default: true })
     active: boolean;
 
-    @Column({type: 'varchar', default: Role.USER})
+    @Column({ type: "varchar", default: Role.USER })
     role: Role;
 
     @CreateDateColumn()

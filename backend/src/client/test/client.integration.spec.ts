@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { NotFoundException } from "@nestjs/common";
 
 import { ClientService } from "../client.service";
 import { Client } from "../entities/client.entity";
@@ -15,7 +15,6 @@ describe("ClientService (integration)", () => {
     let service: ClientService;
     let dataSource: DataSource;
     let repo: Repository<Client>;
-    let crypto: CryptoService;
 
     const cryptoServiceMock = {
         hash: jest.fn().mockImplementation((password: string) => Promise.resolve(`hashed_${password}`)),
@@ -56,7 +55,6 @@ describe("ClientService (integration)", () => {
         service = module.get(ClientService);
         dataSource = module.get(DataSource);
         repo = dataSource.getRepository(Client);
-        crypto = module.get(CryptoService);
     });
 
     afterAll(async () => {
@@ -69,17 +67,14 @@ describe("ClientService (integration)", () => {
     });
 
     it("update: should persist changes", async () => {
-        const saved = await repo.save(
-            repo.create({
-                id: "C1",
-                cpf: "12345678909",
-                name: "Old",
-                lastName: "Name",
-                password: await crypto.hash("Senha@123"),
-                active: true,
-                role: Role.USER,
-            })
-        );
+        const saved = await service.createClientFromKeycloak({
+            keycloakId: "kc-1",
+            email: "old@example.com",
+            name: "Old",
+            lastName: "Name",
+            active: true,
+            role: Role.USER,
+        });
 
         const updated = await service.update(saved.id, { name: "New", lastName: "Last" });
 
@@ -90,73 +85,19 @@ describe("ClientService (integration)", () => {
         expect(found?.lastName).toBe("Last");
     });
 
-    it("changePassword: should persist new password when current is valid", async () => {
-        const client = await repo.save(
-            repo.create({
-                id: "C1",
-                cpf: "12345678909",
-                name: "Mario",
-                lastName: "Henrique",
-                password: await crypto.hash("Senha@123"),
-                active: true,
-                role: Role.USER,
-            })
-        );
-
-        await service.changePassword(client.id, {
-            currentPassword: "Senha@123",
-            newPassword: "NovaSenha@123",
-            confirmPassword: "NovaSenha@123",
-        });
-
-        const found = await repo.findOneBy({ id: client.id });
-        expect(found).toBeTruthy();
-
-        const okOld = await crypto.compare("Senha@123", found!.password);
-        expect(okOld).toBe(false);
-
-        const okNew = await crypto.compare("NovaSenha@123", found!.password);
-        expect(okNew).toBe(true);
-    });
-
-    it("changePassword: should throw when current password invalid", async () => {
-        const client = await repo.save(
-            repo.create({
-                id: "C1",
-                cpf: "12345678909",
-                name: "Mario",
-                lastName: "Henrique",
-                password: await crypto.hash("Senha@123"),
-                active: true,
-                role: Role.USER,
-            })
-        );
-
-        await expect(
-            service.changePassword(client.id, {
-                currentPassword: "Errada@123",
-                newPassword: "NovaSenha@123",
-                confirmPassword: "NovaSenha@123",
-            })
-        ).rejects.toBeInstanceOf(BadRequestException);
-    }, 10000);
-
     it("findByIdorThrow: should throw when not found", async () => {
         await expect(service.findByIdorThrow("NOPE")).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it("deleteClient: should set active=false and save (expects service to persist)", async () => {
-        const client = await repo.save(
-            repo.create({
-                id: "C1",
-                cpf: "12345678909",
-                name: "Mario",
-                lastName: "Henrique",
-                password: await crypto.hash("Senha@123"),
-                active: true,
-                role: Role.USER,
-            })
-        );
+        const client = await service.createClientFromKeycloak({
+            keycloakId: "kc-2",
+            email: "mario@example.com",
+            name: "Mario",
+            lastName: "Henrique",
+            active: true,
+            role: Role.USER,
+        });
 
         reservationServiceMock.findAuthClientReservation.mockResolvedValueOnce({
             data: [{ id: "R1" }, { id: "R2" }],

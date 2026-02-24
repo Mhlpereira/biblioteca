@@ -16,7 +16,6 @@ export class BookController {
     constructor(private readonly bookService: BookService) {}
 
     @Post()
-    @DenyRoles(Role.USER)
     @HttpCode(201)
     @ApiOperation({ summary: "Create book" })
     @ApiResponse({ status: 201, description: "Book created" })
@@ -45,7 +44,6 @@ export class BookController {
     }
 
     @Patch(":id")
-    @DenyRoles(Role.USER)
     @HttpCode(200)
     @ApiOperation({ summary: "Update book info" })
     @ApiResponse({ status: 200, description: "Book deactivated" })
@@ -55,7 +53,6 @@ export class BookController {
     }
 
     @Patch(":id/deactivate")
-    @DenyRoles(Role.USER)
     @HttpCode(200)
     @ApiOperation({ summary: "Deactivate book" })
     @ApiResponse({ status: 200, description: "Book deactivated", type: BookCreateOutput })

@@ -5,31 +5,23 @@ import { JwtAuthGuard } from "./jwt.guard";
 
 describe("JwtAuthGuard", () => {
     let guard: JwtAuthGuard;
-    let reflector: Reflector;
-
-    const reflectorMock = {
-        getAllAndOverride: jest.fn(),
-    };
 
     const createContext = (): ExecutionContext =>
-        ({
-            getHandler: jest.fn(),
-            getClass: jest.fn(),
-        } as any);
+    ({
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: jest.fn().mockReturnValue({
+            getRequest: jest.fn().mockReturnValue({}),
+            getResponse: jest.fn().mockReturnValue({}),
+        }),
+    } as any);
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            providers: [
-                JwtAuthGuard,
-                {
-                    provide: Reflector,
-                    useValue: reflectorMock,
-                },
-            ],
+            providers: [JwtAuthGuard],
         }).compile();
 
         guard = module.get(JwtAuthGuard);
-        reflector = module.get(Reflector);
     });
 
     afterEach(() => {
@@ -40,17 +32,7 @@ describe("JwtAuthGuard", () => {
         expect(guard).toBeDefined();
     });
 
-    it("returns true when route is public", () => {
-        reflectorMock.getAllAndOverride.mockReturnValue(true);
-
-        const result = guard.canActivate(createContext());
-
-        expect(result).toBe(true);
-    });
-
-    it("calls AuthGuard when route is not public", () => {
-        reflectorMock.getAllAndOverride.mockReturnValue(false);
-
+    it("calls super.canActivate when route is not public", () => {
         const superSpy = jest
             .spyOn(Object.getPrototypeOf(JwtAuthGuard.prototype), "canActivate")
             .mockReturnValue(true);

@@ -2,10 +2,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ClientController } from "../client.controller";
 import { ClientService } from "../client.service";
 import { UpdateClientDto } from "../dto/update-client.dto";
-import { UpdatePasswordDto } from "../dto/update-password.dto";
 import { JwtPayload } from "../../auth/types/jwt-payload.types";
 import { FindClientDto } from "../dto/find-client.dto";
-import { Role } from "../../auth/enum/role.enum";
 
 describe("ClientController", () => {
     let controller: ClientController;
@@ -14,16 +12,17 @@ describe("ClientController", () => {
     const mockClientService = {
         findByIdorThrow: jest.fn(),
         update: jest.fn(),
-        changePassword: jest.fn(),
         deleteClient: jest.fn(),
         findAll: jest.fn(),
     };
 
     const mockUser: JwtPayload = {
         sub: "user-id-1",
+        keycloakSub: "user-id-1",
         cpf: "12345678900",
         name: "Mário",
-        role: Role.USER,
+        lastName: "Henrique",
+        email: "mario@example.com",
         active: true,
     };
 
@@ -87,42 +86,6 @@ describe("ClientController", () => {
 
             expect(service.update).toHaveBeenCalledWith(mockUser.sub, dto);
             expect(result).toEqual(updatedClient);
-        });
-    });
-
-    describe("changePassword", () => {
-        it("should change password successfully", async () => {
-            const dto: UpdatePasswordDto = {
-                currentPassword: "Senha456$",
-                newPassword: "Senha123#",
-                confirmPassword: "Senha123#"
-            };
-
-            mockClientService.changePassword.mockResolvedValue(undefined);
-
-            const result = await controller.changePassword(mockUser, dto);
-
-            expect(service.changePassword).toHaveBeenCalledWith(
-                mockUser.sub,
-                dto
-            );
-            expect(result).toBeUndefined();
-        });
-
-        it("should propagate invalid password error", async () => {
-            const dto: UpdatePasswordDto = {
-                currentPassword: "wrong",
-                newPassword: "456",
-                confirmPassword: "678"
-            };
-
-            mockClientService.changePassword.mockRejectedValue(
-                new Error("Current password is invalid")
-            );
-
-            await expect(
-                controller.changePassword(mockUser, dto)
-            ).rejects.toThrow("Current password is invalid");
         });
     });
 

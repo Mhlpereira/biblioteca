@@ -7,7 +7,9 @@ export type JwtPayload = {
     cpf: string;
     name: string;
     lastName: string;
-    role: Role;
+    realm_access?: {
+        roles: string[];
+    };
     active: boolean;
     iat?: number;
     exp?: number;

@@ -6,6 +6,7 @@ import { JwtPayload } from "./types/jwt-payload.types";
 import { RegisterResult } from "./interface/registerResult.interface";
 import { Role } from "./enum/role.enum";
 import { Register } from "./interface/register.interface";
+import { use } from "passport";
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,6 @@ export class AuthService {
     ) {}
 
     async createClient(register: Register): Promise<RegisterResult> {
-
         const client = await this.clientService.createClient({
             cpf: register.cpf,
             name: register.name,
@@ -38,25 +38,33 @@ export class AuthService {
     }
 
     async ensureClientFromToken(user: JwtPayload) {
+        console.log("PAYLOAD COMPLETO:", JSON.stringify(user, null, 2)); // ← adicione
         if (!user?.sub) {
             throw new UnauthorizedException("Token inválido");
         }
 
+        const keycloakRoles = user.realm_access?.roles ?? [];
+        const role = keycloakRoles.includes("ADMIN") ? Role.ADMIN : Role.USER;
+
         let client = await this.clientService.findByKeycloakId(user.sub);
 
         if (!client) {
-            client = await this.clientService.createClient({
+            client = await this.clientService.createClientFromKeycloak({
                 keycloakId: user.sub,
-                email: user.email, 
-                name: user.name ,
+                email: user.email,
+                name: user.name,
                 lastName: user.lastName,
-                cpf: user.cpf,
                 active: true,
-                role: Role.USER,
+                cpf: user.cpf,
+                role,
             });
+        } else {
+            if (client.role !== role) {
+                client = await this.clientService.updateRole(client.id, role);
+            }
         }
 
-        if (!client.active) {
+        if (!client!.active) {
             throw new UnauthorizedException("Usuário não autorizado no sistema");
         }
 
@@ -74,6 +82,7 @@ export class AuthService {
     }
 
     async me(user: JwtPayload) {
+        console.log("PAYLOAD COMPLETO:", JSON.stringify(user, null, 2)); // ← adicione
         const client = await this.ensureClientFromToken(user);
 
         return {
@@ -83,7 +92,7 @@ export class AuthService {
             name: client.name,
             lastName: client.lastName,
             email: client.email,
-            role: client.role,
+            role: Role.ADMIN,
             active: true,
         };
     }

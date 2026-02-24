@@ -8,5 +8,8 @@
     },
     "devDependencies": {
         "concurrently": "^8.2.0"
+    },
+    "dependencies": {
+        "@nestjs/microservices": "^11.1.14"
     }
 }

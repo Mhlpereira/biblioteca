@@ -213,7 +213,7 @@ services:
       KEYCLOAK_CLIENT_ID: "frontend"
 
       KC_ADMIN_CLIENT_ID: "backend"
-      KC_ADMIN_CLIENT_SECRET: "RPYi3WGSfrTFhVbO2OpmjcCROgWtxSG8"
+      KC_ADMIN_CLIENT_SECRET: "SCs6rOvZ9eI2x93771bAdj62nNiH3TrW"
     depends_on:
       mysql:
         condition: service_healthy

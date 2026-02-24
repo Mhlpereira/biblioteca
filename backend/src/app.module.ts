@@ -13,6 +13,8 @@ import { JwtAuthGuard } from "./auth/guard/jwt.guard";
 import { BookCopyModule } from "./book-copy/book-copy.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+import { KafkaConsumerModule } from "./infra/database/kafka/consumer/kafka-consumer.module";
+import { KafkaModule } from "./infra/database/kafka/kafka.module";
 
 @Module({
     imports: [
@@ -70,6 +72,8 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
         AuthModule,
         CryptoModule,
         BookCopyModule,
+        KafkaConsumerModule,
+        KafkaModule
     ],
     controllers: [AppController],
     providers: [

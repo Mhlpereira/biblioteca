@@ -3,22 +3,21 @@ FROM kong:3.6
 USER root
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl unzip git build-essential \
-    libssl-dev libffi-dev \
-    libluajit-5.1-dev \
- && rm -rf /var/lib/apt/lists/*
+     ca-certificates curl unzip git build-essential \
+     libssl-dev libffi-dev \
+     libluajit-5.1-dev \
+     && rm -rf /var/lib/apt/lists/*
 
 ARG LUAROCKS_VER=3.12.1
 RUN curl -fsSL https://luarocks.org/releases/luarocks-${LUAROCKS_VER}.tar.gz -o /tmp/luarocks.tgz \
- && tar -xzf /tmp/luarocks.tgz -C /tmp \
- && cd /tmp/luarocks-${LUAROCKS_VER} \
- # aponta explicitamente pro LuaJIT do Kong
- && ./configure \
-      --with-lua=/usr/local \
-      --with-lua-include=/usr/include/luajit-2.1 \
- && make -j"$(nproc)" \
- && make install \
- && rm -rf /tmp/luarocks* /tmp/luarocks.tgz
+     && tar -xzf /tmp/luarocks.tgz -C /tmp \
+     && cd /tmp/luarocks-${LUAROCKS_VER} \
+     && ./configure \
+     --with-lua=/usr/local \
+     --with-lua-include=/usr/include/luajit-2.1 \
+     && make -j"$(nproc)" \
+     && make install \
+     && rm -rf /tmp/luarocks* /tmp/luarocks.tgz
 
 RUN luarocks --lua-version=5.1 install kong-oidc
 

@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AllExceptionsFilter } from "./common/filter/http-exception.filter";
 import { ValidationPipe } from "@nestjs/common";
 import cookieParser from "cookie-parser";
+import { MicroserviceOptions, Transport } from "@nestjs/microservices";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -30,6 +31,18 @@ async function bootstrap() {
         })
     );
 
+    app.connectMicroservice<MicroserviceOptions>({
+        transport: Transport.KAFKA,
+        options: {
+            client: {
+                brokers: [process.env.KAFKA_BROKERS ?? "kafka:9092"],
+            },
+            consumer: {
+                groupId: "biblioteca-consumer",
+            },
+        },
+    });
+
     const config = new DocumentBuilder()
         .setTitle("Biblioteca API")
         .setDescription("API de gerenciamento de biblioteca")
@@ -40,6 +53,8 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api/docs", app, document);
+
+    await app.startAllMicroservices();
 
     const port = process.env.PORT ? Number(process.env.PORT) : 3000;
     await app.listen(port, "0.0.0.0");

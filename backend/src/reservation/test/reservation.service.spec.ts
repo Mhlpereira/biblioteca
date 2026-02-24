@@ -44,6 +44,11 @@ describe("ReservationService", () => {
     }),
   };
 
+  const mockKafkaClient = {
+    connect: jest.fn().mockResolvedValue(undefined),
+    emit: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -64,6 +69,10 @@ describe("ReservationService", () => {
           provide: DataSource,
           useValue: mockDataSource,
         },
+        {
+          provide: "KAFKA_SERVICE",
+          useValue: mockKafkaClient,
+        },
       ],
     }).compile();
 
@@ -81,7 +90,13 @@ describe("ReservationService", () => {
 
       mockClientService.findByIdorThrow.mockResolvedValue(client);
       mockBookCopyService.findAvailableCopyByBookId.mockResolvedValue(bookCopy);
-      mockRepository.create.mockReturnValue({ id: "res-id" });
+      mockRepository.create.mockReturnValue({
+        id: "res-id",
+        client,
+        bookCopy,
+        reservedAt: new Date(),
+        dueDate: new Date(),
+      });
 
       const result = await service.create({
         clientId: "client-id",

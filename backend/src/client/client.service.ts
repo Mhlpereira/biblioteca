@@ -1,4 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException, Inject, forwardRef } from "@nestjs/common";
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+    Inject,
+    forwardRef,
+    UnauthorizedException,
+} from "@nestjs/common";
 import { cpf } from "cpf-cnpj-validator";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Client } from "./entities/client.entity";
@@ -11,6 +18,7 @@ import { ReservationService } from "../reservation/reservation.service";
 import { FindClient } from "./interface/find-client.interface";
 import { PaginatedResult } from "../common/interfaces/paginated.interface";
 import { ResponseFindClient } from "./interface/response-find-client.interface";
+import { Role } from "../auth/enum/role.enum";
 
 @Injectable()
 export class ClientService {
@@ -31,6 +39,29 @@ export class ClientService {
             ...createClient,
         });
 
+        return this.clientRepository.save(client);
+    }
+
+    async createClientFromKeycloak(data: {
+        keycloakId: string;
+        email: string;
+        name: string;
+        lastName: string;
+        active: boolean;
+        cpf?: string | null;
+        role: Role;
+    }) {
+        const client = this.clientRepository.create({
+            id: ulid(),
+            keycloakId: data.keycloakId,
+            email: data.email,
+            name: data.name,
+            lastName: data.lastName,
+            active: data.active,
+            role: data.role,
+            cpf: data.cpf ?? null, 
+            
+        });
         return this.clientRepository.save(client);
     }
 
@@ -165,5 +196,12 @@ export class ClientService {
         if (newPassword !== confirmPassword) {
             throw new BadRequestException("As senhas não conferem");
         }
+    }
+
+    async updateRole(id: string, role: Role) {
+        await this.clientRepository.update({ id }, { role });
+        const client = await this.clientRepository.findOneBy({ id });
+        if (!client) throw new UnauthorizedException("Cliente não encontrado");
+        return client;
     }
 }

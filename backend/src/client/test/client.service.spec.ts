@@ -11,7 +11,6 @@ import { Role } from "../../auth/enum/role.enum";
 describe("ClientService", () => {
     let service: ClientService;
     let repo: Repository<Client>;
-    let cryptoService: CryptoService;
     let reservationService: ReservationService;
 
     const mockQueryBuilder = {
@@ -29,7 +28,8 @@ describe("ClientService", () => {
         save: jest.fn(),
         findOneBy: jest.fn(),
         createQueryBuilder: jest.fn(() => mockQueryBuilder),
-        remove: jest.fn()
+        remove: jest.fn(),
+        update: jest.fn(),
     };
 
     const mockCryptoService = {
@@ -63,7 +63,6 @@ describe("ClientService", () => {
 
         service = module.get(ClientService);
         repo = module.get(getRepositoryToken(Client));
-        cryptoService = module.get(CryptoService);
         reservationService = module.get(ReservationService);
     });
 
@@ -74,14 +73,15 @@ describe("ClientService", () => {
     describe("createClient", () => {
         it("should create a client successfully", async () => {
             mockRepository.findOneBy.mockResolvedValue(null);
-            mockRepository.create.mockReturnValue({ cpf: "12345678909" });
+            mockRepository.create.mockReturnValue({ cpf: "52998224725" });
             mockRepository.save.mockResolvedValue({ id: "1" });
 
             const result = await service.createClient({
                 cpf: "52998224725",
                 name: "Mário",
                 lastName: "Henrique",
-                password: "123",
+                keycloakId: "kc-abc",
+                email: "mario@example.com",
                 active: true,
                 role: Role.ADMIN,
             });
@@ -96,26 +96,28 @@ describe("ClientService", () => {
                     cpf: "111",
                     name: "Teste",
                     lastName: "Teste",
-                    password: "123",
+                    keycloakId: "kc-abc",
+                    email: "teste@example.com",
                     active: true,
                     role: Role.ADMIN,
                 })
             ).rejects.toThrow(BadRequestException);
         });
 
-        it("should throw if CPF already exists", async () => {
+        it("should throw if email already exists", async () => {
             mockRepository.findOneBy.mockResolvedValue({ id: "1" });
 
             await expect(
                 service.createClient({
-                    cpf: "12345678909",
+                    cpf: "52998224725",
                     name: "Teste",
                     lastName: "Teste",
-                    password: "123",
+                    keycloakId: "kc-abc",
+                    email: "duplicate@example.com",
                     active: true,
                     role: Role.ADMIN,
                 })
-            ).rejects.toThrow("CPF inválido");
+            ).rejects.toThrow(BadRequestException);
         });
     });
 
@@ -176,58 +178,6 @@ describe("ClientService", () => {
 
             expect(result.name).toBe("New");
         });
-    });
-
-    describe("changePassword", () => {
-        it("should change password successfully", async () => {
-            const client = { id: "1", password: "hashed" };
-
-            jest.spyOn(service, "findByIdorThrow").mockResolvedValue(client as any);
-            mockCryptoService.compare.mockResolvedValue(true);
-            mockCryptoService.hash.mockResolvedValue("newHash");
-
-            const result = await service.changePassword("1", {
-                currentPassword: "old",
-                newPassword: "new",
-                confirmPassword: "new",
-            });
-
-            expect(result.message).toBeDefined();
-            expect(repo.save).toHaveBeenCalled();
-        });
-
-        it("should throw if current password is invalid", async () => {
-            jest.spyOn(service, "findByIdorThrow").mockResolvedValue({
-                password: "hashed",
-            } as any);
-
-            mockCryptoService.compare.mockResolvedValue(false);
-
-            await expect(
-                service.changePassword("1", {
-                    currentPassword: "wrong",
-                    newPassword: "new",
-                    confirmPassword: "new",
-                })
-            ).rejects.toThrow("Senha atual inválida");
-        });
-
-        it("should throw if passwords do not match", async () => {
-            jest.spyOn(service, "findByIdorThrow").mockResolvedValue({
-                id: "1",
-                password: "hashed-password",
-            } as any);
-
-            await expect(
-                service.changePassword("1", {
-                    currentPassword: "any",
-                    newPassword: "123",
-                    confirmPassword: "456",
-                })
-            ).rejects.toThrow("As senhas não conferem");
-        });
-
-
     });
 
     describe("deleteClient", () => {

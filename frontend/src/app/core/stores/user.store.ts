@@ -1,24 +1,23 @@
-import { computed, Injectable, signal } from "@angular/core";
+import { signalStore, withState, withMethods, patchState } from "@ngrx/signals";
 import { User } from "../model/user.model";
-import { Role } from "../enums/role.enum";
 
-@Injectable({ providedIn: "root" })
-export class UserStore {
-    private userSignal = signal<User | null>(null);
+type UserState = { user: User | null };
 
-    readonly user = this.userSignal.asReadonly();
-    readonly isAuthenticated = computed(() => !!this.userSignal());
-
-    readonly isAdmin = computed(() => {
-        const user = this.userSignal();
-        return user?.role === Role.ADMIN;
-    });
-
-    setUser(user: User) {
-        this.userSignal.set(user);
-    }
-
-    logout() {
-        this.userSignal.set(null);
-    }
-}
+export const UserStore = signalStore(
+    { providedIn: "root" },
+    withState<UserState>({ user: null }),
+    withMethods(store => ({
+        setUser(user: User) {
+            patchState(store, { user });
+        },
+        logout() {
+            patchState(store, { user: null });
+        },
+        isAdmin() {
+            return store.user()?.role === "ADMIN";
+        },
+        isAuthenticated() {
+            return store.user() !== null;
+        },
+    }))
+);

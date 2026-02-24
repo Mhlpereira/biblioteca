@@ -15,6 +15,7 @@ import { PaginatedResult } from "../common/interfaces/paginated.interface";
 import { ReservationListResponse } from "./interface/reservation-list-response.interface";
 import { CreateFullReservation } from "./interface/create-full-reservation.interface";
 import { FINE_RULES } from "../common/constants/fine.constants";
+import { ClientKafka } from "@nestjs/microservices";
 
 @Injectable()
 export class ReservationService {
@@ -24,9 +25,15 @@ export class ReservationService {
         @Inject(forwardRef(() => ClientService))
         private readonly clientService: ClientService,
         private readonly bookCopyService: BookCopyService,
+        @Inject("KAFKA_SERVICE")
+        private readonly kafkaClient: ClientKafka,
         @InjectDataSource()
         private dataSource: DataSource
     ) {}
+
+    async onModuleInit() {
+        await this.kafkaClient.connect();
+    }
 
     async create(createReservation: CreateReservation) {
         const client = await this.clientService.findByIdorThrow(createReservation.clientId);
@@ -49,6 +56,13 @@ export class ReservationService {
             await manager.update(BookCopy, bookCopy.id, {
                 status: BookCopyStatus.RESERVED,
             });
+        });
+
+        this.kafkaClient.emit("reservation.created", {
+            id: reservation.id,
+            clientId: reservation.client.id,
+            reservedAt: reservation.reservedAt,
+            dueDate: reservation.dueDate,
         });
 
         return reservation;
