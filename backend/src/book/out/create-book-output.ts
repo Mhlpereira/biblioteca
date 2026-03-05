@@ -1,4 +1,4 @@
-export interface CreateBookResponse {
+export interface CreateBookOutput {
     id: string;
     title: string;
     author: string;

@@ -1,4 +1,4 @@
-export interface CreateBook {
+export interface CreateBookInput {
     title: string;
     author: string;
     quantity: number;
