@@ -1,20 +1,41 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { BookController } from "../book.controller";
-import { BookService } from "../book.service";
-import { CreateBookDto } from "../dto/book-create.dto";
-import { UpdateBookDto } from "../dto/update-book.dto";
-import { FindBooksQueryDto } from "../dto/find-book-query.dto";
+import { CreateBookUseCase } from "../use-cases/create-book-usecase";
+import { DeactivateBookUseCase } from "../use-cases/deactivate-book-usecase";
+import { GetBookByIdUseCase } from "../use-cases/get-book-by-id-usecase";
+import { UpdateBookUseCase } from "../use-cases/update-book-usecase";
+import { FindAllBooksUseCase } from "../use-cases/find-all-books-usecase";
+import { CreateBookDto } from "../dto/request/book-create.dto";
+import { UpdateBookDto } from "../dto/request/update-book.dto";
+import { FindBooksQueryDto } from "../dto/query/find-book-query.dto";
+
 
 describe("BookController", () => {
   let controller: BookController;
-  let service: BookService;
+  let createBookUseCase: CreateBookUseCase;
+  let deactivateBookUseCase: DeactivateBookUseCase;
+  let getBookByIdUseCase: GetBookByIdUseCase;
+  let updateBookUseCase: UpdateBookUseCase;
+  let findAllBooksUseCase: FindAllBooksUseCase;
 
-  const mockBookService = {
-    createBook: jest.fn(),
-    findAll: jest.fn(),
-    findBookById: jest.fn(),
-    update: jest.fn(),
-    deactivate: jest.fn(),
+  const mockCreateBookUseCase = {
+    execute: jest.fn(),
+  };
+
+  const mockDeactivateBookUseCase = {
+    execute: jest.fn(),
+  };
+
+  const mockGetBookByIdUseCase = {
+    execute: jest.fn(),
+  };
+
+  const mockUpdateBookUseCase = {
+    execute: jest.fn(),
+  };
+
+  const mockFindAllBooksUseCase = {
+    execute: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -22,14 +43,34 @@ describe("BookController", () => {
       controllers: [BookController],
       providers: [
         {
-          provide: BookService,
-          useValue: mockBookService,
+          provide: CreateBookUseCase,
+          useValue: mockCreateBookUseCase,
+        },
+        {
+          provide: DeactivateBookUseCase,
+          useValue: mockDeactivateBookUseCase,
+        },
+        {
+          provide: GetBookByIdUseCase,
+          useValue: mockGetBookByIdUseCase,
+        },
+        {
+          provide: UpdateBookUseCase,
+          useValue: mockUpdateBookUseCase,
+        },
+        {
+          provide: FindAllBooksUseCase,
+          useValue: mockFindAllBooksUseCase,
         },
       ],
     }).compile();
 
     controller = module.get<BookController>(BookController);
-    service = module.get<BookService>(BookService);
+    createBookUseCase = module.get<CreateBookUseCase>(CreateBookUseCase);
+    deactivateBookUseCase = module.get<DeactivateBookUseCase>(DeactivateBookUseCase);
+    getBookByIdUseCase = module.get<GetBookByIdUseCase>(GetBookByIdUseCase);
+    updateBookUseCase = module.get<UpdateBookUseCase>(UpdateBookUseCase);
+    findAllBooksUseCase = module.get<FindAllBooksUseCase>(FindAllBooksUseCase);
   });
 
   afterEach(() => {
@@ -56,19 +97,24 @@ describe("BookController", () => {
         copies: 3,
       };
 
-      mockBookService.createBook.mockResolvedValue(expected);
+      mockCreateBookUseCase.execute.mockResolvedValue(expected);
 
       const result = await controller.createBook(dto);
 
-      expect(service.createBook).toHaveBeenCalledWith(dto);
-      expect(service.createBook).toHaveBeenCalledTimes(1);
+      expect(createBookUseCase.execute).toHaveBeenCalledWith({
+        title: dto.title,
+        author: dto.author,
+        imageUrl: dto.imageUrl,
+        quantity: dto.quantity,
+      });
+      expect(createBookUseCase.execute).toHaveBeenCalledTimes(1);
       expect(result).toEqual(expected);
     });
 
     it("should propagate service error", async () => {
       const dto = {} as CreateBookDto;
 
-      mockBookService.createBook.mockRejectedValue(
+      mockCreateBookUseCase.execute.mockRejectedValue(
         new Error("Invalid data"),
       );
 
@@ -96,11 +142,11 @@ describe("BookController", () => {
         },
       ];
 
-      mockBookService.findAll.mockResolvedValue(expected);
+      mockFindAllBooksUseCase.execute.mockResolvedValue(expected);
 
       const result = await controller.findAll(query);
 
-      expect(service.findAll).toHaveBeenCalledWith(query);
+      expect(findAllBooksUseCase.execute).toHaveBeenCalledWith(query);
       expect(result).toEqual(expected);
     });
   });
@@ -113,16 +159,16 @@ describe("BookController", () => {
         author: "Eric Evans",
       };
 
-      mockBookService.findBookById.mockResolvedValue(book);
+      mockGetBookByIdUseCase.execute.mockResolvedValue(book);
 
       const result = await controller.findOne("1");
 
-      expect(service.findBookById).toHaveBeenCalledWith("1");
+      expect(getBookByIdUseCase.execute).toHaveBeenCalledWith({ id: "1" });
       expect(result).toEqual(book);
     });
 
     it("should propagate not found error", async () => {
-      mockBookService.findBookById.mockRejectedValue(
+      mockGetBookByIdUseCase.execute.mockRejectedValue(
         new Error("Livro não encontrado"),
       );
 
@@ -144,11 +190,14 @@ describe("BookController", () => {
         author: "Someone",
       };
 
-      mockBookService.update.mockResolvedValue(updatedBook);
+      mockUpdateBookUseCase.execute.mockResolvedValue(updatedBook);
 
       const result = await controller.update("1", dto);
 
-      expect(service.update).toHaveBeenCalledWith("1", dto);
+      expect(updateBookUseCase.execute).toHaveBeenCalledWith({
+        id: "1",
+        ...dto,
+      });
       expect(result).toEqual(updatedBook);
     });
   });
@@ -160,11 +209,11 @@ describe("BookController", () => {
         active: false,
       };
 
-      mockBookService.deactivate.mockResolvedValue(deactivatedBook);
+      mockDeactivateBookUseCase.execute.mockResolvedValue(deactivatedBook);
 
-      const result = await controller.deativate("1");
+      const result = await controller.deactivate("1");
 
-      expect(service.deactivate).toHaveBeenCalledWith("1");
+      expect(deactivateBookUseCase.execute).toHaveBeenCalledWith({ id: "1" });
       expect(result).toEqual(deactivatedBook);
     });
   });

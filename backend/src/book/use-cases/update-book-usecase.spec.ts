@@ -52,7 +52,7 @@ describe('UpdateBookUseCase', () => {
 
   describe('execute', () => {
     it('should update book title successfully', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: 'Updated Clean Code',
@@ -62,10 +62,10 @@ describe('UpdateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookRepository.update.mockResolvedValue(updatedBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.findById).toHaveBeenCalledWith(input.id);
       expect(bookRepository.update).toHaveBeenCalledWith({
         ...mockBook,
@@ -80,7 +80,7 @@ describe('UpdateBookUseCase', () => {
     });
 
     it('should update book author successfully', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         author: 'Uncle Bob',
@@ -90,10 +90,10 @@ describe('UpdateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookRepository.update.mockResolvedValue(updatedBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.update).toHaveBeenCalledWith({
         ...mockBook,
         author: 'Uncle Bob',
@@ -102,7 +102,7 @@ describe('UpdateBookUseCase', () => {
     });
 
     it('should update both title and author successfully', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: 'Clean Code: A Handbook',
@@ -117,10 +117,10 @@ describe('UpdateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookRepository.update.mockResolvedValue(updatedBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.update).toHaveBeenCalledWith({
         ...mockBook,
         title: 'Clean Code: A Handbook',
@@ -131,7 +131,7 @@ describe('UpdateBookUseCase', () => {
     });
 
     it('should not update fields that are undefined', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: undefined,
@@ -141,17 +141,17 @@ describe('UpdateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookRepository.update.mockResolvedValue(mockBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.update).toHaveBeenCalledWith(mockBook);
       expect(result.title).toBe(mockBook.title);
       expect(result.author).toBe(mockBook.author);
     });
 
     it('should handle empty string updates', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: '',
@@ -162,10 +162,10 @@ describe('UpdateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookRepository.update.mockResolvedValue(updatedBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.update).toHaveBeenCalledWith({
         ...mockBook,
         title: '',
@@ -176,7 +176,7 @@ describe('UpdateBookUseCase', () => {
     });
 
     it('should throw NotFoundException when book is not found', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: 'non-existent-id',
         title: 'New Title',
@@ -184,7 +184,7 @@ describe('UpdateBookUseCase', () => {
 
       bookRepository.findById.mockResolvedValue(null);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new NotFoundException('Livro não encontrado')
       );
@@ -193,7 +193,7 @@ describe('UpdateBookUseCase', () => {
     });
 
     it('should propagate repository errors on findById', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: 'New Title',
@@ -202,12 +202,12 @@ describe('UpdateBookUseCase', () => {
       const error = new Error('Database connection failed');
       bookRepository.findById.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should propagate repository errors on update', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: 'New Title',
@@ -217,12 +217,12 @@ describe('UpdateBookUseCase', () => {
       const error = new Error('Update failed');
       bookRepository.update.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Update failed');
     });
 
     it('should modify the original book object before updating', async () => {
-      // Arrange
+
       const input: UpdateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: 'New Title',
@@ -233,11 +233,11 @@ describe('UpdateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(originalBook);
       bookRepository.update.mockResolvedValue(updatedBook);
 
-      // Act
+
       await useCase.execute(input);
 
-      // Assert
-      expect(originalBook.title).toBe('New Title'); // Original object should be modified
+
+      expect(originalBook.title).toBe('New Title'); 
       expect(bookRepository.update).toHaveBeenCalledWith(originalBook);
     });
   });

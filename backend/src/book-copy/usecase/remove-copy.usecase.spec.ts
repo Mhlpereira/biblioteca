@@ -63,7 +63,7 @@ describe('RemoveCopyUseCase', () => {
 
   describe('execute', () => {
     it('should remove copy successfully when copy is available', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -71,10 +71,10 @@ describe('RemoveCopyUseCase', () => {
       bookCopyRepository.findByIdWithBook.mockResolvedValue(mockBookCopy);
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.findByIdWithBook).toHaveBeenCalledWith(input.copyId);
       expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(
         mockBookCopy.id,
@@ -88,14 +88,14 @@ describe('RemoveCopyUseCase', () => {
     });
 
     it('should throw NotFoundException when copy does not exist', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: 'non-existent-id',
       };
 
       bookCopyRepository.findByIdWithBook.mockResolvedValue(null);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new NotFoundException('Cópia do livro não encontrada')
       );
@@ -104,7 +104,7 @@ describe('RemoveCopyUseCase', () => {
     });
 
     it('should throw BadRequestException when copy is not available', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -116,7 +116,7 @@ describe('RemoveCopyUseCase', () => {
 
       bookCopyRepository.findByIdWithBook.mockResolvedValue(reservedCopy);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new BadRequestException(
           `Não é possível remover a cópia. Status atual: ${BookCopyStatus.RESERVED}`
@@ -126,7 +126,7 @@ describe('RemoveCopyUseCase', () => {
     });
 
     it('should throw BadRequestException when copy is already removed', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -138,7 +138,7 @@ describe('RemoveCopyUseCase', () => {
 
       bookCopyRepository.findByIdWithBook.mockResolvedValue(removedCopy);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new BadRequestException(
           `Não é possível remover a cópia. Status atual: ${BookCopyStatus.REMOVED}`
@@ -147,7 +147,7 @@ describe('RemoveCopyUseCase', () => {
     });
 
     it('should handle copy with missing book information', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -160,19 +160,19 @@ describe('RemoveCopyUseCase', () => {
       bookCopyRepository.findByIdWithBook.mockResolvedValue(copyWithoutBook);
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result).toEqual({
         message: 'Cópia removida com sucesso',
         copyId: copyWithoutBook.id,
-        bookTitle: undefined, // book?.title when book is null
+        bookTitle: undefined, 
       });
     });
 
     it('should handle copy with book that has no title', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -186,15 +186,15 @@ describe('RemoveCopyUseCase', () => {
       bookCopyRepository.findByIdWithBook.mockResolvedValue(copyWithBookWithoutTitle);
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.bookTitle).toBeUndefined();
     });
 
     it('should propagate repository errors on findByIdWithBook', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -202,12 +202,12 @@ describe('RemoveCopyUseCase', () => {
       const error = new Error('Database connection failed');
       bookCopyRepository.findByIdWithBook.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should propagate repository errors on updateStatus', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
@@ -216,17 +216,17 @@ describe('RemoveCopyUseCase', () => {
       const error = new Error('Update failed');
       bookCopyRepository.updateStatus.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Update failed');
     });
 
     it('should only allow removal of AVAILABLE status copies', async () => {
-      // Arrange
+
       const input: RemoveCopy = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
       };
 
-      // Test all non-available statuses
+
       const nonAvailableStatuses = [BookCopyStatus.RESERVED, BookCopyStatus.REMOVED];
 
       for (const status of nonAvailableStatuses) {
@@ -237,7 +237,7 @@ describe('RemoveCopyUseCase', () => {
 
         bookCopyRepository.findByIdWithBook.mockResolvedValue(copyWithStatus);
 
-        // Act & Assert
+
         await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
 
         jest.clearAllMocks();

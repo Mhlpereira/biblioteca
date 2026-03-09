@@ -72,7 +72,7 @@ describe('FindAllByBookUseCase', () => {
 
   describe('execute', () => {
     it('should find all copies for a book successfully', async () => {
-      // Arrange
+
       const input: FindAllByBookInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -88,10 +88,10 @@ describe('FindAllByBookUseCase', () => {
 
       bookCopyRepository.findAllByBook.mockResolvedValue(mockPaginatedResult);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.findAllByBook).toHaveBeenCalledWith(input.bookId);
       expect(result).toEqual({
         data: [
@@ -117,7 +117,7 @@ describe('FindAllByBookUseCase', () => {
     });
 
     it('should handle empty result', async () => {
-      // Arrange
+
       const input: FindAllByBookInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -133,10 +133,10 @@ describe('FindAllByBookUseCase', () => {
 
       bookCopyRepository.findAllByBook.mockResolvedValue(mockEmptyResult);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result).toEqual({
         data: [],
         meta: {
@@ -148,7 +148,7 @@ describe('FindAllByBookUseCase', () => {
     });
 
     it('should handle copies with missing book information', async () => {
-      // Arrange
+
       const input: FindAllByBookInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -172,10 +172,10 @@ describe('FindAllByBookUseCase', () => {
 
       bookCopyRepository.findAllByBook.mockResolvedValue(mockResult);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.data[0]).toEqual({
         id: copyWithoutBook.id,
         status: BookCopyStatus.AVAILABLE,
@@ -185,7 +185,7 @@ describe('FindAllByBookUseCase', () => {
     });
 
     it('should preserve pagination metadata', async () => {
-      // Arrange
+
       const input: FindAllByBookInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -201,10 +201,10 @@ describe('FindAllByBookUseCase', () => {
 
       bookCopyRepository.findAllByBook.mockResolvedValue(mockResult);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.meta).toEqual({
         total: 10,
         page: 3,
@@ -213,7 +213,7 @@ describe('FindAllByBookUseCase', () => {
     });
 
     it('should handle different copy statuses', async () => {
-      // Arrange
+
       const input: FindAllByBookInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -235,10 +235,10 @@ describe('FindAllByBookUseCase', () => {
 
       bookCopyRepository.findAllByBook.mockResolvedValue(mockResult);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.data.map(copy => copy.status)).toEqual([
         BookCopyStatus.AVAILABLE,
         BookCopyStatus.RESERVED,
@@ -247,7 +247,7 @@ describe('FindAllByBookUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      // Arrange
+
       const input: FindAllByBookInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -255,7 +255,7 @@ describe('FindAllByBookUseCase', () => {
       const error = new Error('Database connection failed');
       bookCopyRepository.findAllByBook.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
   });

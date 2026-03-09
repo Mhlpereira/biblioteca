@@ -13,9 +13,6 @@ describe('AddCopyUseCase', () => {
   let bookRepository: jest.Mocked<BookRepositoryOutPort>;
   let bookCopyRepository: jest.Mocked<BookCopyRepositoryOutPort>;
 
-  // Note: The original code has a dependency injection issue where 
-  // both bookRepository and bookCopyRepository use the same injection token
-  // This test simulates the intended behavior
 
   const mockBook: Book = {
     id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
@@ -65,9 +62,6 @@ describe('AddCopyUseCase', () => {
       providers: [
         AddCopyUseCase,
         {
-          // Note: The original code incorrectly injects BookRepositoryOutPort 
-          // but uses "BookCopyRepositoryOutPort" token. Since both use the same token,
-          // bookCopyRepository will be resolved for both variables
           provide: 'BookCopyRepositoryOutPort',
           useValue: { ...mockBookRepository, ...mockBookCopyRepository },
         },
@@ -90,20 +84,20 @@ describe('AddCopyUseCase', () => {
 
   describe('execute', () => {
     it('should add copies successfully when book exists', async () => {
-      // Arrange
+
       const input: AddBookCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         quantity: 2,
       };
 
-      // Mock the repositories directly since there's a dependency injection issue in the original code
+
       bookRepository.findById.mockResolvedValue(mockBook);
       bookCopyRepository.addCopies.mockResolvedValue(mockBookCopies);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.findById).toHaveBeenCalledWith(input.bookId);
       expect(bookCopyRepository.addCopies).toHaveBeenCalledWith(mockBook, input.quantity);
       expect(result).toEqual([
@@ -121,7 +115,7 @@ describe('AddCopyUseCase', () => {
     });
 
     it('should throw NotFoundException when book does not exist', async () => {
-      // Arrange
+
       const input: AddBookCopyInput = {
         bookId: 'non-existent-id',
         quantity: 1,
@@ -129,7 +123,7 @@ describe('AddCopyUseCase', () => {
 
       bookRepository.findById.mockResolvedValue(null);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new NotFoundException('Livro não existe')
       );
@@ -137,7 +131,7 @@ describe('AddCopyUseCase', () => {
     });
 
     it('should handle zero quantity', async () => {
-      // Arrange
+
       const input: AddBookCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         quantity: 0,
@@ -146,16 +140,16 @@ describe('AddCopyUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookCopyRepository.addCopies.mockResolvedValue([]);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.addCopies).toHaveBeenCalledWith(mockBook, 0);
       expect(result).toEqual([]);
     });
 
     it('should propagate repository errors', async () => {
-      // Arrange
+
       const input: AddBookCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         quantity: 1,
@@ -164,12 +158,12 @@ describe('AddCopyUseCase', () => {
       const error = new Error('Database connection failed');
       bookRepository.findById.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should propagate book copy repository errors', async () => {
-      // Arrange
+
       const input: AddBookCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         quantity: 1,
@@ -179,12 +173,12 @@ describe('AddCopyUseCase', () => {
       const error = new Error('Failed to add copies');
       bookCopyRepository.addCopies.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Failed to add copies');
     });
 
     it('should map copies to output format correctly', async () => {
-      // Arrange
+
       const input: AddBookCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         quantity: 1,
@@ -198,10 +192,10 @@ describe('AddCopyUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookCopyRepository.addCopies.mockResolvedValue([copyWithDifferentStatus]);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result).toEqual([{
         id: copyWithDifferentStatus.id,
         status: BookCopyStatus.RESERVED,

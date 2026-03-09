@@ -63,17 +63,17 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
 
   describe('execute', () => {
     it('should find available copy successfully', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
 
       bookCopyRepository.findAvailableByBookId.mockResolvedValue(mockBookCopy);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.findAvailableByBookId).toHaveBeenCalledWith(input.bookId);
       expect(result).toEqual({
         id: mockBookCopy.id,
@@ -84,14 +84,14 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
     });
 
     it('should throw NotFoundException when no available copy is found', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
 
       bookCopyRepository.findAvailableByBookId.mockResolvedValue(null);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new NotFoundException('Sem livros disponíveis')
       );
@@ -99,7 +99,7 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
     });
 
     it('should handle copy with missing book information', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -111,20 +111,20 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
 
       bookCopyRepository.findAvailableByBookId.mockResolvedValue(copyWithoutBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result).toEqual({
         id: copyWithoutBook.id,
-        bookTitle: '', // Default to empty string when book?.title is undefined
+        bookTitle: '', 
         status: BookCopyStatus.AVAILABLE,
         bookId: input.bookId,
       });
     });
 
     it('should handle copy with book that has no title', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -137,20 +137,20 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
 
       bookCopyRepository.findAvailableByBookId.mockResolvedValue(copyWithBookWithoutTitle);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.bookTitle).toBe('');
     });
 
     it('should use input bookId in output', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: 'specific-book-id',
       };
 
-      // Mock copy with different book ID to ensure input.bookId is used
+
       const mockCopyWithDifferentBookId: BookCopy = {
         ...mockBookCopy,
         book: { ...mockBook, id: 'different-book-id' },
@@ -158,15 +158,15 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
 
       bookCopyRepository.findAvailableByBookId.mockResolvedValue(mockCopyWithDifferentBookId);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
-      expect(result.bookId).toBe('specific-book-id'); // Should use input.bookId, not copy.book.id
+
+      expect(result.bookId).toBe('specific-book-id'); 
     });
 
     it('should propagate repository errors', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -174,18 +174,18 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
       const error = new Error('Database connection failed');
       bookCopyRepository.findAvailableByBookId.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should preserve copy status in output', async () => {
-      // Arrange
+
       const input: FindAvailableCopyInput = {
         bookId: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
 
-      // This test verifies that the status is preserved, even though logically 
-      // findAvailableByBookId should only return AVAILABLE copies
+
+
       const copyWithExpectedStatus = {
         ...mockBookCopy,
         status: BookCopyStatus.AVAILABLE,
@@ -193,10 +193,10 @@ describe('FindAvailableCopyByBookIdUseCase', () => {
 
       bookCopyRepository.findAvailableByBookId.mockResolvedValue(copyWithExpectedStatus);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.status).toBe(BookCopyStatus.AVAILABLE);
     });
   });

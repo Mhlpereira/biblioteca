@@ -62,7 +62,7 @@ describe('BookCopyRepository', () => {
 
   describe('addCopies', () => {
     it('should create and save multiple book copies', async () => {
-      // Arrange
+
       const quantity = 3;
       const mockCopies = [
         { ...mockBookCopy, id: '01HJQZ5R3N7MTXVGQE5J8K9M0Q' },
@@ -75,10 +75,10 @@ describe('BookCopyRepository', () => {
         .mockReturnValueOnce(mockCopies[2] as any);
       typeormRepository.save.mockResolvedValue(mockCopies as any);
 
-      // Act
+
       const result = await repository.addCopies(mockBook, quantity);
 
-      // Assert
+
       expect(typeormRepository.create).toHaveBeenCalledTimes(quantity);
       expect(typeormRepository.create).toHaveBeenCalledWith({
         id: expect.any(String),
@@ -90,50 +90,50 @@ describe('BookCopyRepository', () => {
     });
 
     it('should create zero copies when quantity is 0', async () => {
-      // Arrange
+
       const quantity = 0;
       typeormRepository.save.mockResolvedValue([] as any);
 
-      // Act
+
       const result = await repository.addCopies(mockBook, quantity);
 
-      // Assert
+
       expect(typeormRepository.create).not.toHaveBeenCalled();
       expect(typeormRepository.save).toHaveBeenCalledWith([]);
       expect(result).toEqual([]);
     });
 
     it('should generate ULID for each copy', async () => {
-      // Arrange
+
       const quantity = 2;
       typeormRepository.create.mockReturnValue(mockBookCopy);
       typeormRepository.save.mockResolvedValue([mockBookCopy, mockBookCopy] as any);
 
-      // Act
+
       await repository.addCopies(mockBook, quantity);
 
-      // Assert
+
       const createCalls = typeormRepository.create.mock.calls;
       expect(createCalls).toHaveLength(quantity);
       createCalls.forEach(call => {
         const copyData = call[0] as any;
         expect(copyData.id).toBeDefined();
         expect(typeof copyData.id).toBe('string');
-        expect(copyData.id.length).toBe(26); // ULID length
+        expect(copyData.id.length).toBe(26); 
       });
     });
   });
 
   describe('findByIdWithBook', () => {
     it('should find book copy with book relation', async () => {
-      // Arrange
+
       const copyId = '01HJQZ5R3N7MTXVGQE5J8K9M0Q';
       typeormRepository.findOne.mockResolvedValue(mockBookCopy);
 
-      // Act
+
       const result = await repository.findByIdWithBook(copyId);
 
-      // Assert
+
       expect(typeormRepository.findOne).toHaveBeenCalledWith({
         where: { id: copyId },
         relations: ['book'],
@@ -142,28 +142,28 @@ describe('BookCopyRepository', () => {
     });
 
     it('should return null when copy is not found', async () => {
-      // Arrange
+
       const copyId = 'non-existent-id';
       typeormRepository.findOne.mockResolvedValue(null);
 
-      // Act
+
       const result = await repository.findByIdWithBook(copyId);
 
-      // Assert
+
       expect(result).toBeNull();
     });
   });
 
   describe('findAvailableByBookId', () => {
     it('should find available copy for book', async () => {
-      // Arrange
+
       const bookId = '01HJQZ5R3N7MTXVGQE5J8K9M0P';
       typeormRepository.findOne.mockResolvedValue(mockBookCopy);
 
-      // Act
+
       const result = await repository.findAvailableByBookId(bookId);
 
-      // Assert
+
       expect(typeormRepository.findOne).toHaveBeenCalledWith({
         where: {
           book: { id: bookId },
@@ -174,29 +174,29 @@ describe('BookCopyRepository', () => {
     });
 
     it('should return null when no available copy is found', async () => {
-      // Arrange
+
       const bookId = '01HJQZ5R3N7MTXVGQE5J8K9M0P';
       typeormRepository.findOne.mockResolvedValue(null);
 
-      // Act
+
       const result = await repository.findAvailableByBookId(bookId);
 
-      // Assert
+
       expect(result).toBeNull();
     });
   });
 
   describe('updateStatus', () => {
     it('should update copy status', async () => {
-      // Arrange
+
       const copyId = '01HJQZ5R3N7MTXVGQE5J8K9M0Q';
       const newStatus = BookCopyStatus.RESERVED;
       typeormRepository.update.mockResolvedValue(undefined as any);
 
-      // Act
+
       await repository.updateStatus(copyId, newStatus);
 
-      // Assert
+
       expect(typeormRepository.update).toHaveBeenCalledWith(
         { id: copyId },
         { status: newStatus }
@@ -204,17 +204,17 @@ describe('BookCopyRepository', () => {
     });
 
     it('should handle different status types', async () => {
-      // Arrange
+
       const copyId = '01HJQZ5R3N7MTXVGQE5J8K9M0Q';
       const statuses = [BookCopyStatus.AVAILABLE, BookCopyStatus.RESERVED, BookCopyStatus.REMOVED];
 
       for (const status of statuses) {
         typeormRepository.update.mockResolvedValue(undefined as any);
 
-        // Act
+
         await repository.updateStatus(copyId, status);
 
-        // Assert
+
         expect(typeormRepository.update).toHaveBeenCalledWith(
           { id: copyId },
           { status }
@@ -227,16 +227,16 @@ describe('BookCopyRepository', () => {
 
   describe('findAllByBook', () => {
     it('should return paginated book copies for a book', async () => {
-      // Arrange
+
       const bookId = '01HJQZ5R3N7MTXVGQE5J8K9M0P';
       const mockCopies = [mockBookCopy];
       const total = 1;
       typeormRepository.findAndCount.mockResolvedValue([mockCopies, total]);
 
-      // Act
+
       const result = await repository.findAllByBook(bookId);
 
-      // Assert
+
       expect(typeormRepository.findAndCount).toHaveBeenCalledWith({
         where: {
           book: { id: bookId },
@@ -256,14 +256,14 @@ describe('BookCopyRepository', () => {
     });
 
     it('should return empty result when no copies found', async () => {
-      // Arrange
+
       const bookId = '01HJQZ5R3N7MTXVGQE5J8K9M0P';
       typeormRepository.findAndCount.mockResolvedValue([[], 0]);
 
-      // Act
+
       const result = await repository.findAllByBook(bookId);
 
-      // Assert
+
       expect(result).toEqual({
         data: [],
         meta: {

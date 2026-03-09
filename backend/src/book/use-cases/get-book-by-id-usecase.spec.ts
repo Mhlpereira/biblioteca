@@ -52,17 +52,17 @@ describe('GetBookByIdUseCase', () => {
 
   describe('execute', () => {
     it('should get book by id successfully', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
 
       bookRepository.findById.mockResolvedValue(mockBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(bookRepository.findById).toHaveBeenCalledWith(input.id);
       expect(result).toEqual({
         id: mockBook.id,
@@ -74,7 +74,7 @@ describe('GetBookByIdUseCase', () => {
     });
 
     it('should return active book correctly', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -82,15 +82,15 @@ describe('GetBookByIdUseCase', () => {
       const activeBook = { ...mockBook, active: true };
       bookRepository.findById.mockResolvedValue(activeBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.active).toBe(true);
     });
 
     it('should return inactive book correctly', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -98,15 +98,15 @@ describe('GetBookByIdUseCase', () => {
       const inactiveBook = { ...mockBook, active: false };
       bookRepository.findById.mockResolvedValue(inactiveBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.active).toBe(false);
     });
 
     it('should handle book with null imageUrl', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -114,15 +114,15 @@ describe('GetBookByIdUseCase', () => {
       const bookWithoutImage = { ...mockBook, imageUrl: null as any };
       bookRepository.findById.mockResolvedValue(bookWithoutImage);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.imageUrl).toBeNull();
     });
 
     it('should handle book with empty imageUrl', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -130,22 +130,22 @@ describe('GetBookByIdUseCase', () => {
       const bookWithEmptyImage = { ...mockBook, imageUrl: '' };
       bookRepository.findById.mockResolvedValue(bookWithEmptyImage);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result.imageUrl).toBe('');
     });
 
     it('should throw NotFoundException when book is not found', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: 'non-existent-id',
       };
 
       bookRepository.findById.mockResolvedValue(null);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow(
         new NotFoundException('Livro não encontrado')
       );
@@ -153,7 +153,7 @@ describe('GetBookByIdUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -161,12 +161,12 @@ describe('GetBookByIdUseCase', () => {
       const error = new Error('Database connection failed');
       bookRepository.findById.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should not modify the original book object', async () => {
-      // Arrange
+
       const input: GetBookByIdInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -174,16 +174,16 @@ describe('GetBookByIdUseCase', () => {
       const originalBook = { ...mockBook };
       bookRepository.findById.mockResolvedValue(originalBook);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
-      expect(originalBook).toEqual(mockBook); // Original object should remain unchanged
-      expect(result).not.toBe(originalBook); // Result should be a different object
+
+      expect(originalBook).toEqual(mockBook); 
+      expect(result).not.toBe(originalBook); 
     });
 
     it('should handle various ULID formats', async () => {
-      // Arrange
+
       const validUlids = [
         '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
@@ -195,10 +195,10 @@ describe('GetBookByIdUseCase', () => {
         const book = { ...mockBook, id: ulid };
         bookRepository.findById.mockResolvedValue(book);
 
-        // Act
+
         const result = await useCase.execute(input);
 
-        // Assert
+
         expect(result.id).toBe(ulid);
         expect(bookRepository.findById).toHaveBeenCalledWith(ulid);
 

@@ -52,7 +52,7 @@ describe('DeactivateBookUseCase', () => {
 
   describe('execute', () => {
     it('should deactivate a book successfully', async () => {
-      // Arrange
+      
       const input: DeactivateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -61,10 +61,10 @@ describe('DeactivateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(mockBook);
       bookRepository.update.mockResolvedValue(deactivatedBook);
 
-      // Act
+      
       const result = await useCase.execute(input);
 
-      // Assert
+      
       expect(bookRepository.findById).toHaveBeenCalledWith(input.id);
       expect(bookRepository.update).toHaveBeenCalledWith({
         ...mockBook,
@@ -77,14 +77,14 @@ describe('DeactivateBookUseCase', () => {
     });
 
     it('should throw NotFoundException when book is not found', async () => {
-      // Arrange
+      
       const input: DeactivateBookInput = {
         id: 'non-existent-id',
       };
 
       bookRepository.findById.mockResolvedValue(null);
 
-      // Act & Assert
+      
       await expect(useCase.execute(input)).rejects.toThrow(
         new NotFoundException('Livro não encontrado')
       );
@@ -93,7 +93,7 @@ describe('DeactivateBookUseCase', () => {
     });
 
     it('should handle already deactivated book', async () => {
-      // Arrange
+      
       const input: DeactivateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -102,10 +102,10 @@ describe('DeactivateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(alreadyDeactivatedBook);
       bookRepository.update.mockResolvedValue(alreadyDeactivatedBook);
 
-      // Act
+      
       const result = await useCase.execute(input);
 
-      // Assert
+      
       expect(bookRepository.update).toHaveBeenCalledWith({
         ...alreadyDeactivatedBook,
         active: false,
@@ -114,7 +114,7 @@ describe('DeactivateBookUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      // Arrange
+      
       const input: DeactivateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -123,12 +123,12 @@ describe('DeactivateBookUseCase', () => {
       const error = new Error('Database connection failed');
       bookRepository.update.mockRejectedValue(error);
 
-      // Act & Assert
+      
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should modify the book object correctly before updating', async () => {
-      // Arrange
+      
       const input: DeactivateBookInput = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
       };
@@ -137,10 +137,10 @@ describe('DeactivateBookUseCase', () => {
       bookRepository.findById.mockResolvedValue(originalBook);
       bookRepository.update.mockResolvedValue({ ...originalBook, active: false });
 
-      // Act
+      
       await useCase.execute(input);
 
-      // Assert
+      
       expect(originalBook.active).toBe(false); // The original object should be modified
       expect(bookRepository.update).toHaveBeenCalledWith(originalBook);
     });

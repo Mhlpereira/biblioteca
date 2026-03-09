@@ -13,11 +13,11 @@ import { CreateFullReservationDto } from "./dto/request/create-full-reservation.
 import { Public } from "../auth/decorators/public.decorator";
 import { CreateFullReservationUseCase } from "./usecase/create-full-reservation.usecase";
 import { CreateReservationUseCase } from "./usecase/create-reservation.usecase";
-import { FindAllReservationsUseCase } from "./usecase/finda-all-reservations.usecase";
+import { FindAllReservationsUseCase } from "./usecase/find-all-reservations.usecase";
 import { FindByUserIdReservationUseCase } from "./usecase/find-by-user-id-reservation.usecase";
 import { RemoveReservationUseCase } from "./usecase/remove-reservation.usecase";
 import { UpdateReservationUseCase } from "./usecase/update-reservation.usecase";
-import { FindByIdReservationUseCase } from "./usecase/finda-by-id-reservation.usecase";
+import { FindByIdReservationUseCase } from "./usecase/find-by-id-reservation.usecase";
 import { Roles } from "../auth/decorators/roles.decorator";
 
 @Controller("reservation")

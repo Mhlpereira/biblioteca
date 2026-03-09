@@ -41,7 +41,7 @@ describe('UpdateCopyStatusUseCase', () => {
 
   describe('execute', () => {
     it('should update copy status to AVAILABLE', async () => {
-      // Arrange
+
       const input: UpdateCopyStatusInput = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
         status: BookCopyStatus.AVAILABLE,
@@ -49,10 +49,10 @@ describe('UpdateCopyStatusUseCase', () => {
 
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(
         input.copyId,
         BookCopyStatus.AVAILABLE
@@ -60,7 +60,7 @@ describe('UpdateCopyStatusUseCase', () => {
     });
 
     it('should update copy status to RESERVED', async () => {
-      // Arrange
+
       const input: UpdateCopyStatusInput = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
         status: BookCopyStatus.RESERVED,
@@ -68,10 +68,10 @@ describe('UpdateCopyStatusUseCase', () => {
 
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(
         input.copyId,
         BookCopyStatus.RESERVED
@@ -79,7 +79,7 @@ describe('UpdateCopyStatusUseCase', () => {
     });
 
     it('should update copy status to REMOVED', async () => {
-      // Arrange
+
       const input: UpdateCopyStatusInput = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
         status: BookCopyStatus.REMOVED,
@@ -87,10 +87,10 @@ describe('UpdateCopyStatusUseCase', () => {
 
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(
         input.copyId,
         BookCopyStatus.REMOVED
@@ -98,18 +98,18 @@ describe('UpdateCopyStatusUseCase', () => {
     });
 
     it('should handle status as string and cast to BookCopyStatus', async () => {
-      // Arrange
+
       const input: UpdateCopyStatusInput = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
-        status: 'AVAILABLE' as any, // Simulating string input
+        status: 'AVAILABLE' as any, 
       };
 
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       await useCase.execute(input);
 
-      // Assert
+
       expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(
         input.copyId,
         'AVAILABLE' as BookCopyStatus
@@ -117,7 +117,7 @@ describe('UpdateCopyStatusUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      // Arrange
+
       const input: UpdateCopyStatusInput = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
         status: BookCopyStatus.AVAILABLE,
@@ -126,12 +126,12 @@ describe('UpdateCopyStatusUseCase', () => {
       const error = new Error('Database connection failed');
       bookCopyRepository.updateStatus.mockRejectedValue(error);
 
-      // Act & Assert
+
       await expect(useCase.execute(input)).rejects.toThrow('Database connection failed');
     });
 
     it('should not return any value', async () => {
-      // Arrange
+
       const input: UpdateCopyStatusInput = {
         copyId: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
         status: BookCopyStatus.AVAILABLE,
@@ -139,15 +139,15 @@ describe('UpdateCopyStatusUseCase', () => {
 
       bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-      // Act
+
       const result = await useCase.execute(input);
 
-      // Assert
+
       expect(result).toBeUndefined();
     });
 
     it('should handle different copy IDs', async () => {
-      // Arrange
+
       const copyIds = [
         '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
         '01HJQZ5R3N7MTXVGQE5J8K9M0R',
@@ -162,10 +162,10 @@ describe('UpdateCopyStatusUseCase', () => {
 
         bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-        // Act
+
         await useCase.execute(input);
 
-        // Assert
+
         expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(
           copyId,
           BookCopyStatus.AVAILABLE
@@ -176,7 +176,7 @@ describe('UpdateCopyStatusUseCase', () => {
     });
 
     it('should handle all valid book copy statuses', async () => {
-      // Arrange
+
       const statuses = [BookCopyStatus.AVAILABLE, BookCopyStatus.RESERVED, BookCopyStatus.REMOVED];
       const copyId = '01HJQZ5R3N7MTXVGQE5J8K9M0Q';
 
@@ -188,10 +188,10 @@ describe('UpdateCopyStatusUseCase', () => {
 
         bookCopyRepository.updateStatus.mockResolvedValue(undefined);
 
-        // Act
+
         await useCase.execute(input);
 
-        // Assert
+
         expect(bookCopyRepository.updateStatus).toHaveBeenCalledWith(copyId, status);
 
         jest.clearAllMocks();

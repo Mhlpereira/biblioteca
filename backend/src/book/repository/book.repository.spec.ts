@@ -70,7 +70,7 @@ describe('BookRepository', () => {
 
   describe('create', () => {
     it('should create and save a book', async () => {
-      // Arrange
+
       const bookData: Partial<Book> = {
         id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
         title: 'Clean Code',
@@ -81,10 +81,10 @@ describe('BookRepository', () => {
       typeormRepository.create.mockReturnValue(mockBook);
       typeormRepository.save.mockResolvedValue(mockBook);
 
-      // Act
+
       const result = await repository.create(bookData);
 
-      // Assert
+
       expect(typeormRepository.create).toHaveBeenCalledWith(bookData);
       expect(typeormRepository.save).toHaveBeenCalledWith(mockBook);
       expect(result).toEqual(mockBook);
@@ -93,27 +93,27 @@ describe('BookRepository', () => {
 
   describe('findById', () => {
     it('should find a book by id', async () => {
-      // Arrange
+
       const bookId = '01HJQZ5R3N7MTXVGQE5J8K9M0P';
       typeormRepository.findOneBy.mockResolvedValue(mockBook);
 
-      // Act
+
       const result = await repository.findById(bookId);
 
-      // Assert
+
       expect(typeormRepository.findOneBy).toHaveBeenCalledWith({ id: bookId });
       expect(result).toEqual(mockBook);
     });
 
     it('should return null when book is not found', async () => {
-      // Arrange
+
       const bookId = 'non-existent-id';
       typeormRepository.findOneBy.mockResolvedValue(null);
 
-      // Act
+
       const result = await repository.findById(bookId);
 
-      // Assert
+
       expect(typeormRepository.findOneBy).toHaveBeenCalledWith({ id: bookId });
       expect(result).toBeNull();
     });
@@ -121,14 +121,14 @@ describe('BookRepository', () => {
 
   describe('update', () => {
     it('should update a book', async () => {
-      // Arrange
+
       const updatedBook = { ...mockBook, title: 'Updated Title' };
       typeormRepository.save.mockResolvedValue(updatedBook);
 
-      // Act
+
       const result = await repository.update(updatedBook);
 
-      // Assert
+
       expect(typeormRepository.save).toHaveBeenCalledWith(updatedBook);
       expect(result).toEqual(updatedBook);
     });
@@ -156,7 +156,7 @@ describe('BookRepository', () => {
     });
 
     it('should return paginated books with all filters', async () => {
-      // Arrange
+
       const filtersWithAll: BookFilters = {
         ...filters,
         title: 'clean',
@@ -164,10 +164,10 @@ describe('BookRepository', () => {
         onlyAvailable: true,
       };
 
-      // Act
+
       const result = await repository.findAll(filtersWithAll);
 
-      // Assert
+
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         'LOWER(book.title) LIKE LOWER(:title)',
         { title: '%clean%' }
@@ -196,10 +196,10 @@ describe('BookRepository', () => {
     });
 
     it('should return paginated books without filters', async () => {
-      // Act
+
       const result = await repository.findAll(filters);
 
-      // Assert
+
       expect(queryBuilder.andWhere).not.toHaveBeenCalled();
       expect(queryBuilder.having).not.toHaveBeenCalled();
       expect(result.data).toBeDefined();
@@ -207,31 +207,31 @@ describe('BookRepository', () => {
     });
 
     it('should handle books with no image URL', async () => {
-      // Arrange
+
       const mockDataWithoutImage = [{
         ...mockRawData[0],
         imageurl: null,
       }];
       queryBuilder.getRawMany.mockReset().mockResolvedValueOnce(mockDataWithoutImage).mockResolvedValueOnce(mockDataWithoutImage);
 
-      // Act
+
       const result = await repository.findAll(filters);
 
-      // Assert
+
       expect(result.data[0].imageUrl).toBe('');
     });
 
     it('should calculate pagination correctly', async () => {
-      // Arrange
+
       const paginationFilters: BookFilters = {
         page: 2,
         limit: 5,
       };
 
-      // Act
+
       await repository.findAll(paginationFilters);
 
-      // Assert
+
       expect(queryBuilder.limit).toHaveBeenCalledWith(5);
       expect(queryBuilder.offset).toHaveBeenCalledWith(5);
     });

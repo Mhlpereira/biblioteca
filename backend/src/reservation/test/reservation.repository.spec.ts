@@ -4,195 +4,310 @@ import { Repository } from 'typeorm';
 import { ReservationRepository } from '../repository/reservation.repository';
 import { Reservation } from '../entities/reservation.entity';
 import { ReservationStatus } from '../enum/reservation-status.enum';
+import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
+import { ReservationFilters } from '../ports/in/reservation-filters.in';
 
 describe('ReservationRepository', () => {
   let repository: ReservationRepository;
-  let typeOrmRepo: jest.Mocked<Repository<Reservation>>;
+  let ormRepository: jest.Mocked<Repository<Reservation>>;
 
-  const createQueryBuilderMock = (rawResult: any[] = [], count = 0) => {
-    const qb: any = {
-      leftJoin: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      addSelect: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      addOrderBy: jest.fn().mockReturnThis(),
-      setParameter: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      offset: jest.fn().mockReturnThis(),
-      clone: jest.fn(),
-      getCount: jest.fn().mockResolvedValue(count),
-      getRawMany: jest.fn().mockResolvedValue(rawResult),
-    };
-    qb.clone.mockReturnValue({ ...qb, getCount: jest.fn().mockResolvedValue(count) });
-    return qb;
+  const mockBook = {
+    id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
+    title: 'Clean Code',
+    author: 'Robert Martin',
+    imageUrl: 'image.png',
+    active: true,
+    copies: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
-  const mockTypeOrmRepo = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOneBy: jest.fn(),
-    findOne: jest.fn(),
-    remove: jest.fn(),
-    createQueryBuilder: jest.fn(),
+  const mockBookCopy = {
+    id: '01HJQZ5R3N7MTXVGQE5J8K9M0Q',
+    book: mockBook,
+    status: BookCopyStatus.RESERVED,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
+
+  const mockReservation = {
+    id: '01HJQZ5R3N7MTXVGQE5J8K9M0R',
+    keycloackClientId: 'user-123',
+    bookCopy: mockBookCopy,
+    reservedAt: new Date(),
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    status: ReservationStatus.ACTIVE,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as Reservation;
 
   beforeEach(async () => {
+    const mockOrmRepository = {
+      create: jest.fn(),
+      save: jest.fn(),
+      findOne: jest.fn(),
+      find: jest.fn(),
+      remove: jest.fn(),
+      createQueryBuilder: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReservationRepository,
-        { provide: getRepositoryToken(Reservation), useValue: mockTypeOrmRepo },
+        {
+          provide: getRepositoryToken(Reservation),
+          useValue: mockOrmRepository,
+        },
       ],
     }).compile();
 
-    repository = module.get(ReservationRepository);
-    typeOrmRepo = module.get(getRepositoryToken(Reservation));
+    repository = module.get<ReservationRepository>(ReservationRepository);
+    ormRepository = module.get(getRepositoryToken(Reservation));
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
+  it('should be defined', () => {
+    expect(repository).toBeDefined();
+  });
+
   describe('create', () => {
     it('should create and save a reservation', async () => {
-      const data = { id: 'res-1', status: ReservationStatus.ACTIVE } as Partial<Reservation>;
-      const created = { ...data } as Reservation;
-      mockTypeOrmRepo.create.mockReturnValue(created);
-      mockTypeOrmRepo.save.mockResolvedValue(created);
+      ormRepository.create.mockReturnValue(mockReservation);
+      ormRepository.save.mockResolvedValue(mockReservation);
 
-      const result = await repository.create(data);
+      const result = await repository.create({ ...mockReservation });
 
-      expect(mockTypeOrmRepo.create).toHaveBeenCalledWith(data);
-      expect(mockTypeOrmRepo.save).toHaveBeenCalledWith(created);
-      expect(result).toEqual(created);
+      expect(ormRepository.create).toHaveBeenCalled();
+      expect(ormRepository.save).toHaveBeenCalledWith(mockReservation);
+      expect(result).toEqual(mockReservation);
     });
   });
 
   describe('findById', () => {
-    it('should return reservation by id', async () => {
-      const reservation = { id: 'res-1' } as Reservation;
-      mockTypeOrmRepo.findOneBy.mockResolvedValue(reservation);
+    it('should find a reservation by id', async () => {
+      ormRepository.findOne.mockResolvedValue(mockReservation);
 
-      const result = await repository.findById('res-1');
+      const result = await repository.findById(mockReservation.id);
 
-      expect(mockTypeOrmRepo.findOneBy).toHaveBeenCalledWith({ id: 'res-1' });
-      expect(result).toEqual(reservation);
+      expect(ormRepository.findOne).toHaveBeenCalledWith({ where: { id: mockReservation.id } });
+      expect(result).toEqual(mockReservation);
     });
 
-    it('should return null when not found', async () => {
-      mockTypeOrmRepo.findOneBy.mockResolvedValue(null);
+    it('should return null when reservation is not found', async () => {
+      ormRepository.findOne.mockResolvedValue(null);
 
-      const result = await repository.findById('non-existent');
+      const result = await repository.findById('non-existent-id');
 
       expect(result).toBeNull();
     });
   });
 
-  describe('findByIdWithBookCopy', () => {
-    it('should return reservation with bookCopy relation', async () => {
-      const reservation = { id: 'res-1', bookCopy: { id: 'copy-1' } } as any;
-      mockTypeOrmRepo.findOne.mockResolvedValue(reservation);
+  describe('findByUserId', () => {
+    it('should find reservations by user id', async () => {
+      const reservations = [mockReservation];
+      ormRepository.find.mockResolvedValue(reservations);
 
-      const result = await repository.findByIdWithBookCopy('res-1');
+      const result = await repository.findByUserId('user-123');
 
-      expect(mockTypeOrmRepo.findOne).toHaveBeenCalledWith({
-        where: { id: 'res-1' },
-        relations: ['bookCopy'],
+      expect(ormRepository.find).toHaveBeenCalledWith({
+        where: { keycloackClientId: 'user-123' },
+        relations: ['bookCopy', 'bookCopy.book'],
       });
-      expect(result).toEqual(reservation);
+      expect(result.data).toEqual(reservations);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.lastPage).toBe(1);
+    });
+
+    it('should return empty result when no reservations found', async () => {
+      ormRepository.find.mockResolvedValue([]);
+
+      const result = await repository.findByUserId('user-456');
+
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+    });
+  });
+
+  describe('findByIdWithBookCopy', () => {
+    it('should find a reservation with book copy relation', async () => {
+      ormRepository.findOne.mockResolvedValue(mockReservation);
+
+      const result = await repository.findByIdWithBookCopy(mockReservation.id);
+
+      expect(ormRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockReservation.id },
+        relations: ['bookCopy', 'bookCopy.book'],
+      });
+      expect(result).toEqual(mockReservation);
+    });
+
+    it('should return null when reservation is not found', async () => {
+      ormRepository.findOne.mockResolvedValue(null);
+
+      const result = await repository.findByIdWithBookCopy('non-existent-id');
+
+      expect(result).toBeNull();
     });
   });
 
   describe('save', () => {
     it('should save a reservation', async () => {
-      const reservation = { id: 'res-1' } as Reservation;
-      mockTypeOrmRepo.save.mockResolvedValue(reservation);
+      ormRepository.save.mockResolvedValue(mockReservation);
 
-      const result = await repository.save(reservation);
+      const result = await repository.save(mockReservation);
 
-      expect(mockTypeOrmRepo.save).toHaveBeenCalledWith(reservation);
-      expect(result).toEqual(reservation);
+      expect(ormRepository.save).toHaveBeenCalledWith(mockReservation);
+      expect(result).toEqual(mockReservation);
     });
   });
 
   describe('remove', () => {
     it('should remove a reservation', async () => {
-      const reservation = { id: 'res-1' } as Reservation;
-      mockTypeOrmRepo.remove.mockResolvedValue(reservation);
+      ormRepository.remove.mockResolvedValue(mockReservation);
 
-      await repository.remove(reservation);
+      await repository.remove(mockReservation);
 
-      expect(mockTypeOrmRepo.remove).toHaveBeenCalledWith(reservation);
+      expect(ormRepository.remove).toHaveBeenCalledWith(mockReservation);
     });
   });
 
   describe('findAll', () => {
-    it('should return paginated results', async () => {
-      const rawData = [
-        {
-          id: 'res-1',
-          clientName: 'Mario',
-          bookTitle: 'Clean Code',
-          bookImage: null,
-          author: 'Robert Martin',
-          reservedAt: new Date('2026-03-01'),
-          dueDate: new Date('2026-04-01'),
-          returnedAt: null,
-          status: ReservationStatus.ACTIVE,
-          fineAmount: null,
-        },
-      ];
+    const mockQueryBuilder = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      setParameter: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getCount: jest.fn(),
+      getMany: jest.fn(),
+    };
 
-      const qb = createQueryBuilderMock(rawData, 1);
-      mockTypeOrmRepo.createQueryBuilder.mockReturnValue(qb);
+    beforeEach(() => {
+      ormRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder as never);
+    });
 
-      const result = await repository.findAll({ page: 1, limit: 10 });
+    it('should find all reservations with pagination', async () => {
+      const filters: ReservationFilters = { page: 1, limit: 10 };
+      mockQueryBuilder.getCount.mockResolvedValue(1);
+      mockQueryBuilder.getMany.mockResolvedValue([mockReservation]);
 
-      expect(mockTypeOrmRepo.createQueryBuilder).toHaveBeenCalledWith('reservation');
-      expect(result.data).toHaveLength(1);
-      expect(result.meta).toEqual({ total: 1, page: 1, lastPage: 1 });
-      expect(result.data[0].id).toBe('res-1');
+      const result = await repository.findAll(filters);
+
+      expect(ormRepository.createQueryBuilder).toHaveBeenCalledWith('reservation');
+      expect(result.data).toEqual([mockReservation]);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.lastPage).toBe(1);
     });
 
     it('should apply clientId filter', async () => {
-      const qb = createQueryBuilderMock([], 0);
-      mockTypeOrmRepo.createQueryBuilder.mockReturnValue(qb);
+      const filters: ReservationFilters = { page: 1, limit: 10, clientId: 'user-123' };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
 
-      await repository.findAll({ page: 1, limit: 10, clientId: 'client-1' });
+      await repository.findAll(filters);
 
-      expect(qb.andWhere).toHaveBeenCalledWith('client.id = :clientId', { clientId: 'client-1' });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.keycloackClientId = :clientId',
+        { clientId: 'user-123' },
+      );
+    });
+
+    it('should apply bookId filter', async () => {
+      const filters: ReservationFilters = { page: 1, limit: 10, bookId: 'book-123' };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
+
+      await repository.findAll(filters);
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'book.id = :bookId',
+        { bookId: 'book-123' },
+      );
     });
 
     it('should apply status filter', async () => {
-      const qb = createQueryBuilderMock([], 0);
-      mockTypeOrmRepo.createQueryBuilder.mockReturnValue(qb);
+      const filters: ReservationFilters = { page: 1, limit: 10, status: ReservationStatus.ACTIVE };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
 
-      await repository.findAll({ page: 1, limit: 10, status: 'ACTIVE' });
+      await repository.findAll(filters);
 
-      expect(qb.andWhere).toHaveBeenCalledWith('reservation.status = :status', { status: 'ACTIVE' });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.status = :status',
+        { status: ReservationStatus.ACTIVE },
+      );
     });
 
     it('should apply overdueOnly filter', async () => {
-      const qb = createQueryBuilderMock([], 0);
-      mockTypeOrmRepo.createQueryBuilder.mockReturnValue(qb);
+      const filters: ReservationFilters = { page: 1, limit: 10, overdueOnly: true };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
 
-      await repository.findAll({ page: 1, limit: 10, overdueOnly: true });
+      await repository.findAll(filters);
 
-      expect(qb.andWhere).toHaveBeenCalledWith('reservation.dueDate < :now', expect.any(Object));
-      expect(qb.andWhere).toHaveBeenCalledWith('reservation.status != :returned', {
-        returned: ReservationStatus.RETURNED,
-      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.dueDate < :now',
+        expect.objectContaining({ now: expect.any(Date) }),
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.status != :returned',
+        { returned: ReservationStatus.RETURNED },
+      );
     });
 
-    it('should calculate pagination correctly', async () => {
-      const qb = createQueryBuilderMock([], 25);
-      mockTypeOrmRepo.createQueryBuilder.mockReturnValue(qb);
+    it('should apply reservedAt filter', async () => {
+      const filters: ReservationFilters = { page: 1, limit: 10, reservedAt: '2025-01-01' };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
 
-      const result = await repository.findAll({ page: 2, limit: 10 });
+      await repository.findAll(filters);
 
-      expect(qb.limit).toHaveBeenCalledWith(10);
-      expect(qb.offset).toHaveBeenCalledWith(10);
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.reservedAt >= :reservedAt',
+        { reservedAt: new Date('2025-01-01') },
+      );
+    });
+
+    it('should apply dueDate filter', async () => {
+      const filters: ReservationFilters = { page: 1, limit: 10, dueDate: '2025-12-31' };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
+
+      await repository.findAll(filters);
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.dueDate <= :dueDate',
+        { dueDate: new Date('2025-12-31') },
+      );
+    });
+
+    it('should apply returnedAt filter', async () => {
+      const filters: ReservationFilters = { page: 1, limit: 10, returnedAt: '2025-06-15' };
+      mockQueryBuilder.getCount.mockResolvedValue(0);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
+
+      await repository.findAll(filters);
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'reservation.returnedAt <= :returnedAt',
+        { returnedAt: new Date('2025-06-15') },
+      );
+    });
+
+    it('should calculate lastPage correctly', async () => {
+      const filters: ReservationFilters = { page: 1, limit: 5 };
+      mockQueryBuilder.getCount.mockResolvedValue(12);
+      mockQueryBuilder.getMany.mockResolvedValue([]);
+
+      const result = await repository.findAll(filters);
+
       expect(result.meta.lastPage).toBe(3);
     });
   });
