@@ -3,22 +3,16 @@ FROM kong:3.6
 USER root
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-     ca-certificates curl unzip git build-essential \
-     libssl-dev libffi-dev \
-     libluajit-5.1-dev \
-     && rm -rf /var/lib/apt/lists/*
+    git luarocks \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-ARG LUAROCKS_VER=3.12.1
-RUN curl -fsSL https://luarocks.org/releases/luarocks-${LUAROCKS_VER}.tar.gz -o /tmp/luarocks.tgz \
-     && tar -xzf /tmp/luarocks.tgz -C /tmp \
-     && cd /tmp/luarocks-${LUAROCKS_VER} \
-     && ./configure \
-     --with-lua=/usr/local \
-     --with-lua-include=/usr/include/luajit-2.1 \
-     && make -j"$(nproc)" \
-     && make install \
-     && rm -rf /tmp/luarocks* /tmp/luarocks.tgz
+RUN luarocks install lua-resty-openidc
+RUN luarocks install lua-resty-session
 
-RUN luarocks --lua-version=5.1 install kong-oidc
+RUN git clone https://github.com/revomatico/kong-oidc.git /tmp/kong-oidc \
+    && cp -r /tmp/kong-oidc/kong/plugins/oidc /usr/local/share/lua/5.1/kong/plugins/ \
+    && rm -rf /tmp/kong-oidc
 
 USER kong
