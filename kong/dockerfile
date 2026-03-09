@@ -2,17 +2,20 @@ FROM kong:3.6
 
 USER root
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git luarocks \
+RUN apt-get update && apt-get install -y \
+    git \
     ca-certificates \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN luarocks install lua-resty-openidc
-RUN luarocks install lua-resty-session
+RUN git clone https://github.com/zmartzone/lua-resty-openidc.git /usr/local/openresty/lualib/resty/openidc
+
+RUN git clone https://github.com/bungle/lua-resty-session.git /usr/local/openresty/lualib/resty/session
 
 RUN git clone https://github.com/revomatico/kong-oidc.git /tmp/kong-oidc \
-    && cp -r /tmp/kong-oidc/kong/plugins/oidc /usr/local/share/lua/5.1/kong/plugins/ \
-    && rm -rf /tmp/kong-oidc
+ && mkdir -p /usr/local/share/lua/5.1/kong/plugins/oidc \
+ && cp -r /tmp/kong-oidc/kong/plugins/oidc/* \
+ /usr/local/share/lua/5.1/kong/plugins/oidc/ \
+ && rm -rf /tmp/kong-oidc
 
 USER kong
