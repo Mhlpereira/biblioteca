@@ -14,7 +14,7 @@ describe("JwtAuthGuard", () => {
             getRequest: jest.fn().mockReturnValue({}),
             getResponse: jest.fn().mockReturnValue({}),
         }),
-    } as any);
+    } as unknown as ExecutionContext);
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({

@@ -1,10 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AuthService } from "../auth.service";
 import { ClientService } from "../../client/client.service";
-import { CryptoService } from "../../common/crypto/crypto.service";
 import { UnauthorizedException } from "@nestjs/common";
 import { Role } from "../enum/role.enum";
-import { JwtPayload } from "../types/jwt-payload.types";
+import { AuthUser } from "../types/auth-user.types";
 
 describe("AuthService", () => {
     let service: AuthService;
@@ -16,17 +15,11 @@ describe("AuthService", () => {
         updateRole: jest.fn(),
     };
 
-    const mockCryptoService = {
-        hash: jest.fn(),
-        compare: jest.fn(),
-    };
-
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,
                 { provide: ClientService, useValue: mockClientService },
-                { provide: CryptoService, useValue: mockCryptoService },
             ],
         }).compile();
 
@@ -76,15 +69,14 @@ describe("AuthService", () => {
     });
 
     describe("ensureClientFromToken", () => {
-        const payload: JwtPayload = {
-            sub: "kc-uuid",
-            keycloakSub: "kc-uuid",
+        const authUser: AuthUser = {
+            keycloakId: "kc-uuid",
             email: "joao@example.com",
             cpf: "12345678900",
             name: "João",
             lastName: "Silva",
             active: true,
-            realm_access: { roles: ["USER"] },
+            role: Role.USER,
         };
 
         it("creates client when not found in db", async () => {
@@ -95,7 +87,7 @@ describe("AuthService", () => {
                 role: Role.USER,
             });
 
-            const result = await service.ensureClientFromToken(payload);
+            const result = await service.ensureClientFromToken(authUser);
 
             expect(mockClientService.createClientFromKeycloak).toHaveBeenCalled();
             expect(result).toHaveProperty("id", "1");
@@ -105,15 +97,15 @@ describe("AuthService", () => {
             const existingClient = { id: "1", active: true, role: Role.USER };
             mockClientService.findByKeycloakId.mockResolvedValue(existingClient);
 
-            const result = await service.ensureClientFromToken(payload);
+            const result = await service.ensureClientFromToken(authUser);
 
             expect(mockClientService.createClientFromKeycloak).not.toHaveBeenCalled();
             expect(result).toBe(existingClient);
         });
 
-        it("throws when token has no sub", async () => {
+        it("throws when token has no keycloakId", async () => {
             await expect(
-                service.ensureClientFromToken({ ...payload, sub: "" })
+                service.ensureClientFromToken({ ...authUser, keycloakId: "" })
             ).rejects.toThrow(UnauthorizedException);
         });
 
@@ -124,7 +116,7 @@ describe("AuthService", () => {
                 role: Role.USER,
             });
 
-            await expect(service.ensureClientFromToken(payload)).rejects.toThrow(
+            await expect(service.ensureClientFromToken(authUser)).rejects.toThrow(
                 UnauthorizedException
             );
         });

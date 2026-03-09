@@ -1,14 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PaginatedResponseDto } from '../../common/dto/pagination-response.dto';
-import { FindAllBooksInput } from '../in/find-all-books-input';
-import { FindAllBooksOutput } from '../out/finda-all-books-output';
-import { IBookRepository } from '../ports/i-book-repository';
+import { FindAllBooksInput } from '../ports/in/find-all-books-input';
+import { FindAllBooksOutput } from '../ports/out/find-all-books-output';
+import { BookRepositoryOutPort } from '../ports/book-repository-out.port';
 
 @Injectable()
 export class FindAllBooksUseCase {
   constructor(
-    @Inject('IBookRepository')
-    private readonly bookRepository: IBookRepository,
+    @Inject('BookRepositoryOutPort')
+    private readonly bookRepository: BookRepositoryOutPort,
   ) {}
 
   async execute(input: FindAllBooksInput): Promise<PaginatedResponseDto<FindAllBooksOutput>> {

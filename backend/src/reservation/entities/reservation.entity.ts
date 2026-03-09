@@ -1,6 +1,5 @@
 import { Entity, PrimaryColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { BookCopy } from "../../book-copy/entities/book-copy.entity";
-import { Client } from "../../client/entities/client.entity";
 import { ReservationStatus } from "../enum/reservation-status.enum";
 
 @Entity()
@@ -8,8 +7,8 @@ export class Reservation {
     @PrimaryColumn({ type: "varchar", length: 26 })
     id: string;
 
-    @ManyToOne(() => Client)
-    client: Client;
+    @Column()
+    keycloackClientId: string;
 
     @ManyToOne(() => BookCopy)
     bookCopy: BookCopy;

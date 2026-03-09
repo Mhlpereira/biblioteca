@@ -11,16 +11,16 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { PaginatedResponseDto } from '../common/dto/pagination-response.dto';
-import { BookCreateOutput } from './dto/book-create-output.dto';
-import { CreateBookDto } from './dto/book-create.dto';
-import { FindBooksQueryDto } from './dto/find-book-query.dto';
-import { BookListResponseDto } from './dto/list-book-output.dto';
-import { UpdateBookDto } from './dto/update-book.dto';
+import { BookCreateOutput } from './dto/response/book-create-output.dto';
+import { BookListResponseDto } from './dto/response/list-book-output.dto';
 import { CreateBookUseCase } from './use-cases/create-book-usecase';
 import { DeactivateBookUseCase } from './use-cases/deactivate-book-usecase';
-import { FindAllBooksUseCase } from './use-cases/find-all-books-usecase';
 import { GetBookByIdUseCase } from './use-cases/get-book-by-id-usecase';
 import { UpdateBookUseCase } from './use-cases/update-book-usecase';
+import { FindAllBooksUseCase } from './use-cases/find-all-books-usecase';
+import { CreateBookDto } from './dto/request/book-create.dto';
+import { FindBooksQueryDto } from './dto/query/find-book-query.dto';
+import { UpdateBookDto } from './dto/request/update-book.dto';
 
 
 
@@ -56,7 +56,7 @@ export class BookController {
   @ApiResponse({ status: 200, description: 'List of books' })
   @ApiResponse({ status: 404, description: 'No books are found' })
   async findAll(@Query() query: FindBooksQueryDto): Promise<PaginatedResponseDto<BookListResponseDto>> {
-    return this.findAllBooksUseCase.execute({ //arrumar o retorno 
+    return this.findAllBooksUseCase.execute({ 
       page: query.page,
       limit: query.limit,
       title: query.title,

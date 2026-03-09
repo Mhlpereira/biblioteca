@@ -1,14 +1,14 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DeactivateBookInput } from '../in/deactivate-book-input';
-import { DeactivateBookOutput } from '../out/deactivate-book-outputs';
-import { IBookRepository } from '../ports/i-book-repository';
+import { DeactivateBookInput } from '../ports/in/deactivate-book-input';
+import { DeactivateBookOutput } from '../ports/out/deactivate-book-outputs';
+import { BookRepositoryOutPort } from '../ports/book-repository-out.port';
 
 
 @Injectable()
 export class DeactivateBookUseCase {
   constructor(
-    @Inject('IBookRepository')
-    private readonly bookRepository: IBookRepository,
+    @Inject('BookRepositoryOutPort')
+    private readonly bookRepository: BookRepositoryOutPort,
   ) {}
 
   async execute(input: DeactivateBookInput): Promise<DeactivateBookOutput> {

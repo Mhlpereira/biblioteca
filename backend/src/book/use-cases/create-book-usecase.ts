@@ -1,19 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ulid } from 'ulid';
-import { IBookRepository } from '../ports/i-book-repository';
-import { CreateBookInput } from '../in/create-book-input';
-import { CreateBookOutput } from '../out/create-book-output';
-import { IBookCopyRepository } from '../../book-copy/ports/i-book-copy-repository';
+import { CreateBookInput } from '../ports/in/create-book-input';
+import { CreateBookOutput } from '../ports/out/create-book-output';
+import { BookRepositoryOutPort } from '../ports/book-repository-out.port';
+import { BookCopyRepositoryOutPort } from '../../book-copy/ports/book-copy-out.port';
 
 
 @Injectable()
 export class CreateBookUseCase {
   constructor(
-    @Inject('IBookRepository')
-    private readonly bookRepository: IBookRepository,
+    @Inject('BookRepositoryOutPort')
+    private readonly bookRepository: BookRepositoryOutPort,
 
-    @Inject('IBookCopyRepository')
-    private readonly bookCopyRepository: IBookCopyRepository,
+    @Inject('BookCopyRepositoryOutPort')
+    private readonly bookCopyRepository: BookCopyRepositoryOutPort,
   ) {}
 
   async execute(input: CreateBookInput): Promise<CreateBookOutput> {

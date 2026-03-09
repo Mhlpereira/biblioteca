@@ -1,10 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ReservationController } from "../reservation.controller";
-import { ReservationService } from "../reservation.service";
-import { CreateReservationDto } from "../dto/create-reservation.dto";
-import { UpdateReservationDto } from "../dto/update-reservation.dto";
-import { FindReservationDto } from "../dto/find-reservation.dto";
+import { CreateReservationDto } from "../dto/request/create-reservation.dto";
+import { UpdateReservationDto } from "../dto/request/update-reservation.dto";
+import { FindReservationDto } from "../dto/query/find-reservation.dto";
 import { ReservationStatus } from "../enum/reservation-status.enum";
+import { AuthUser } from "../../auth/types/auth-user.types";
+import { Role } from "../../auth/enum/role.enum";
 
 describe("ReservationController", () => {
     let controller: ReservationController;
@@ -46,7 +47,7 @@ describe("ReservationController", () => {
         it("should create a reservation", async () => {
             const dto: CreateReservationDto = {
                 bookId: "book-1",
-                clientId: "client-1",
+                keycloackClientId: "client-1",
             };
 
             const expected = { id: "res-1" };
@@ -95,7 +96,15 @@ describe("ReservationController", () => {
 
     describe("findAuthClientReservations", () => {
         it("should return reservations for authenticated client", async () => {
-            const user = { sub: "client-1" };
+            const user: AuthUser = {
+                keycloakId: "client-1",
+                email: "test@example.com",
+                cpf: "12345678900",
+                name: "Test",
+                lastName: "User",
+                role: Role.USER,
+                active: true,
+            };
 
             const expected = {
                 data: [{ id: "res-1" }],
@@ -104,7 +113,7 @@ describe("ReservationController", () => {
 
             mockReservationService.findAuthClientReservation.mockResolvedValue(expected);
 
-            const result = await controller.findAuthClientReservations(user as any);
+            const result = await controller.findAuthClientReservations(user);
 
             expect(service.findAuthClientReservation).toHaveBeenCalledWith("client-1");
             expect(result).toEqual(expected);

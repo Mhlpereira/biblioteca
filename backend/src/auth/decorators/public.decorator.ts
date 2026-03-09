@@ -1,3 +1,5 @@
-import { SetMetadata } from "@nestjs/common";
+import { SetMetadata } from '@nestjs/common';
 
-export const Public = () => SetMetadata('isPublic', true);
+export const PERMIT_ALL_KEY = 'isPublic';
+
+export const Public = () => SetMetadata(PERMIT_ALL_KEY, true);

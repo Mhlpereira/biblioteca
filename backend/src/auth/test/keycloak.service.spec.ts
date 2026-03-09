@@ -121,10 +121,10 @@ describe("KeycloakService", () => {
 
             setup409();
 
-            let caught: any;
+            let caught: unknown;
             try {
                 await service.createUser(input);
-            } catch (e) {
+            } catch (e: unknown) {
                 caught = e;
             }
 

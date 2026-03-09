@@ -3,9 +3,8 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository, DataSource } from "typeorm";
 
 import { NotFoundException, BadRequestException } from "@nestjs/common";
-import { BookCopyService } from "../../book-copy/book-copy.service";
+import { BookCopyRepository } from "../../book-copy/repository/book-copy.repository";
 import { BookCopyStatus } from "../../book-copy/enum/book-status.enum";
-import { ClientService } from "../../client/client.service";
 import { Reservation } from "../entities/reservation.entity";
 import { ReservationStatus } from "../enum/reservation-status.enum";
 import { ReservationService } from "../reservation.service";
@@ -14,7 +13,7 @@ import { ReservationService } from "../reservation.service";
 describe("ReservationService", () => {
   let service: ReservationService;
   let repository: Repository<Reservation>;
-  let bookCopyService: BookCopyService;
+  let bookCopyService: BookCopyRepository;
 
   const mockRepository = {
     create: jest.fn(),
@@ -30,7 +29,7 @@ describe("ReservationService", () => {
   };
 
   const mockBookCopyService = {
-    findAvailableCopyByBookId: jest.fn(),
+    findAvailableByBookId: jest.fn(),
     updateStatus: jest.fn(),
   };
 
@@ -58,11 +57,7 @@ describe("ReservationService", () => {
           useValue: mockRepository,
         },
         {
-          provide: ClientService,
-          useValue: mockClientService,
-        },
-        {
-          provide: BookCopyService,
+          provide: BookCopyRepository,
           useValue: mockBookCopyService,
         },
         {
@@ -78,7 +73,7 @@ describe("ReservationService", () => {
 
     service = module.get<ReservationService>(ReservationService);
     repository = module.get(getRepositoryToken(Reservation));
-    bookCopyService = module.get(BookCopyService);
+    bookCopyService = module.get(BookCopyRepository);
 
     jest.clearAllMocks();
   });
@@ -88,8 +83,7 @@ describe("ReservationService", () => {
       const client = { id: "client-id" };
       const bookCopy = { id: "copy-id" };
 
-      mockClientService.findByIdorThrow.mockResolvedValue(client);
-      mockBookCopyService.findAvailableCopyByBookId.mockResolvedValue(bookCopy);
+      mockBookCopyService.findAvailableByBookId.mockResolvedValue(bookCopy);
       mockRepository.create.mockReturnValue({
         id: "res-id",
         client,
@@ -104,7 +98,7 @@ describe("ReservationService", () => {
       });
 
       expect(result).toBeDefined();
-      expect(mockBookCopyService.findAvailableCopyByBookId).toHaveBeenCalled();
+      expect(mockBookCopyService.findAvailableByBookId).toHaveBeenCalled();
       expect(mockDataSource.transaction).toHaveBeenCalled();
     });
   });

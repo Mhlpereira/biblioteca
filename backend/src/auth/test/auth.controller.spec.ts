@@ -1,7 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AuthController } from "../auth.controller";
 import { AuthService } from "../auth.service";
-import { JwtPayload } from "../types/jwt-payload.types";
+import { AuthUser } from "../types/auth-user.types";
+import { Role } from "../enum/role.enum";
 
 describe("AuthController", () => {
     let controller: AuthController;
@@ -37,30 +38,30 @@ describe("AuthController", () => {
 
     describe("GET /me", () => {
         it("should return current authenticated user", () => {
-            const jwtPayload: JwtPayload = {
-                sub: "kc-uuid-1",
-                keycloakSub: "kc-uuid-1",
+            const authUser: AuthUser = {
+                keycloakId: "kc-uuid-1",
                 cpf: "12345678900",
                 name: "Mário",
                 lastName: "Henrique",
                 email: "mario@example.com",
                 active: true,
+                role: Role.USER,
             };
 
             const expectedResult = {
                 id: "1",
-                cpf: jwtPayload.cpf,
-                name: jwtPayload.name,
-                lastName: jwtPayload.lastName,
-                email: jwtPayload.email,
+                cpf: authUser.cpf,
+                name: authUser.name,
+                lastName: authUser.lastName,
+                email: authUser.email,
                 active: true,
             };
 
             mockAuthService.me.mockReturnValue(expectedResult);
 
-            const result = controller.me(jwtPayload);
+            const result = controller.me(authUser);
 
-            expect(authService.me).toHaveBeenCalledWith(jwtPayload);
+            expect(authService.me).toHaveBeenCalledWith(authUser);
             expect(result).toEqual(expectedResult);
         });
     });

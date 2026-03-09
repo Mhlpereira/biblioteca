@@ -3,7 +3,6 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { BookModule } from "./book/book.module";
 import { ReservationModule } from "./reservation/reservation.module";
-import { ClientModule } from "./client/client.module";
 import { AuthModule } from "./auth/auth.module";
 import { LoggerModule } from "nestjs-pino";
 import { CryptoModule } from "./common/crypto/crypto.module";
@@ -68,7 +67,6 @@ import { KafkaModule } from "./infra/database/kafka/kafka.module";
 
         BookModule,
         ReservationModule,
-        ClientModule,
         AuthModule,
         CryptoModule,
         BookCopyModule,

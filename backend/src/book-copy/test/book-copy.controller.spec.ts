@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { BookCopyController } from "../book-copy.controller";
 import { BookCopyService } from "../book-copy.service";
 import { AddBookCopyDto } from "../dto/add-copy.dto";
-import { RemoveCopyDto } from "../dto/remove-copy.dto";
+import { RemoveCopyDto } from "../dto/request/remove-copy-request.dto";
 
 describe("BookCopyController", () => {
     let controller: BookCopyController;
