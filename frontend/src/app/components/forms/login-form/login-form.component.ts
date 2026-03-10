@@ -2,6 +2,11 @@ import { Component, EventEmitter, Input, Output, inject } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { NgxMaskDirective } from "ngx-mask";
 
+export interface LoginCredentials {
+    username: string;
+    password: string;
+}
+
 @Component({
     selector: "app-login-form",
     standalone: true,
@@ -14,8 +19,7 @@ export class LoginFormComponent {
     @Input() isLoading = false;
     @Input() errorMessage = "";
 
-    // ✅ agora não envia credenciais
-    @Output() loginSubmit = new EventEmitter<void>();
+    @Output() loginSubmit = new EventEmitter<LoginCredentials>();
 
     showPassword = false;
 
@@ -29,6 +33,13 @@ export class LoginFormComponent {
     });
 
     onSubmit() {
-        this.loginSubmit.emit();
+        if (this.form.valid) {
+            const cpf = this.form.get("cpf")?.value || "";
+            // Remove mask characters from CPF to use as username
+            const username = cpf.replace(/\D/g, "");
+            const password = this.form.get("password")?.value || "";
+            
+            this.loginSubmit.emit({ username, password });
+        }
     }
 }

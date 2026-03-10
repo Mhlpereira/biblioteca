@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 import { CommonModule } from '@angular/common'; // Para animações se necessário
 import { CpfValidator } from '../../../shared/validators/cpf.validator';
-import { RegisterRequest } from '../../../core/model/auth.models';
+import { RegisterData } from '../../../services/auth.service';
 import { MatchValidator } from '../../../shared/validators/match.validator';
 import { PasswordValidator } from '../../../shared/validators/password.validator';
 
@@ -19,7 +19,7 @@ export class RegisterFormComponent {
 
   @Input() isLoading = false;
   @Input() errorMessage = '';
-  @Output() registerSubmit = new EventEmitter<RegisterRequest>();
+  @Output() registerSubmit = new EventEmitter<RegisterData>();
 
   showPassword = false;
   showConfirmPassword = false;
@@ -36,7 +36,7 @@ export class RegisterFormComponent {
 
   onSubmit() {
     if (this.form.valid) {
-      this.registerSubmit.emit(this.form.value as RegisterRequest);
+      this.registerSubmit.emit(this.form.value as RegisterData);
     } else {
       this.form.markAllAsTouched();
     }

@@ -17,8 +17,7 @@ export class SidebarComponent {
     public userStore = inject(UserStore);
 
     logout() {
-        this.authService.logout().then(() => {
-            this.router.navigate(["/login"]);
-        });
+        this.authService.logout();
+        this.router.navigate(["/login"]);
     }
 }

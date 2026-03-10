@@ -1,8 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService, RegisterData } from '../../../services/auth.service';
 import { RegisterFormComponent } from '../../../components/forms/register-form/register-form.component';
-import { RegisterRequest } from '../../../core/model/auth.models';
 
 @Component({
   selector: 'app-register-page',
@@ -18,19 +17,20 @@ export class RegisterPage {
   isLoading = false;
   errorMessage = '';
 
-  handleRegister(data: RegisterRequest) {
+  async handleRegister(data: RegisterData) {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.register(data).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.router.navigate(['/login']); 
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = err.error?.message || 'Erro ao criar conta. Tente novamente.';
+    try {
+      await this.authService.register(data);
+      this.router.navigate(['/login']);
+    } catch (err: any) {
+      this.isLoading = false;
+      if (err?.status === 409) {
+        this.errorMessage = 'CPF já cadastrado.';
+      } else {
+        this.errorMessage = err.error?.errorMessage || 'Erro ao criar conta. Tente novamente.';
       }
-    });
+    }
   }
 }

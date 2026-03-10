@@ -1,9 +1,13 @@
 import { Component, inject, OnInit } from "@angular/core";
-import { Router, RouterLink } from "@angular/router";
+import { Router, RouterLink, ActivatedRoute } from "@angular/router";
 import { AuthService } from "../../../services/auth.service";
-import { LoginRequest } from "../../../core/model/auth.models";
 import { LoginFormComponent } from "../../../components/forms/login-form/login-form.component";
 import { UserStore } from "../../../core/stores/user.store";
+
+export interface LoginCredentials {
+    username: string;
+    password: string;
+}
 
 @Component({
     selector: "app-login-page",
@@ -15,26 +19,35 @@ import { UserStore } from "../../../core/stores/user.store";
 export class LoginPage implements OnInit {
     private authService = inject(AuthService);
     private router = inject(Router);
+    private route = inject(ActivatedRoute);
     public userStore = inject(UserStore);
 
     isLoading = false;
     errorMessage = "";
+    private returnUrl = "/dashboard";
 
     ngOnInit() {
-        if (this.userStore.isAuthenticated()) {
-            this.router.navigate(["/dashboard"]);
+        this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/dashboard";
+        
+        if (this.authService.isAuthenticated()) {
+            this.router.navigate([this.returnUrl]);
         }
     }
 
-    async handleLogin() {
+    async handleLogin(credentials: LoginCredentials) {
         this.isLoading = true;
         this.errorMessage = "";
 
         try {
-            await this.authService.login();
-        } catch (err) {
+            await this.authService.login(credentials.username, credentials.password);
+            this.router.navigate([this.returnUrl]);
+        } catch (err: any) {
             this.isLoading = false;
-            this.errorMessage = "Não foi possível iniciar o login.";
+            if (err?.status === 401) {
+                this.errorMessage = "Usuário ou senha inválidos.";
+            } else {
+                this.errorMessage = "Erro ao fazer login. Tente novamente.";
+            }
             console.error(err);
         }
     }

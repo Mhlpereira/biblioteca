@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { Router } from "@angular/router";
 import { ClientService } from "../../../services/client.service";
 import { AuthService } from "../../../services/auth.service"; // Para logout após deletar
 import { CommonModule } from "@angular/common";
@@ -13,6 +14,7 @@ import { UserStore } from "../../../core/stores/user.store";
 })
 export class SettingsPage implements OnInit {
     private fb = inject(FormBuilder);
+    private router = inject(Router);
     private clientService = inject(ClientService);
     private authService = inject(AuthService);
     private userStore = inject(UserStore);
@@ -82,9 +84,8 @@ export class SettingsPage implements OnInit {
             this.isLoading = true;
             this.clientService.deleteAccount().subscribe({
                 next: () => {
-                    this.authService.logout()
-                        .then(() => {})
-                        .catch(() => {});
+                    this.authService.logout();
+                    this.router.navigate(["/login"]);
                 },
                 error: () => {
                     this.isLoading = false;
