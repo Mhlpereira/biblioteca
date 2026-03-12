@@ -7,13 +7,15 @@ import { AuthModule } from "./auth/auth.module";
 import { LoggerModule } from "nestjs-pino";
 import { CryptoModule } from "./common/crypto/crypto.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { JwtAuthGuard } from "./auth/guard/jwt.guard";
 import { BookCopyModule } from "./book-copy/book-copy.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { KafkaConsumerModule } from "./infra/database/kafka/consumer/kafka-consumer.module";
 import { KafkaModule } from "./infra/database/kafka/kafka.module";
+import { LoggingInterceptor } from "./common/interceptor/logging.interceptor";
+import { HealthModule } from "./health/health.module";
 
 @Module({
     imports: [
@@ -71,7 +73,8 @@ import { KafkaModule } from "./infra/database/kafka/kafka.module";
         CryptoModule,
         BookCopyModule,
         KafkaConsumerModule,
-        KafkaModule
+        KafkaModule,
+        HealthModule
     ],
     controllers: [AppController],
     providers: [
@@ -79,6 +82,10 @@ import { KafkaModule } from "./infra/database/kafka/kafka.module";
         {
             provide: APP_GUARD,
             useClass: JwtAuthGuard,
+        },
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: LoggingInterceptor,
         },
     ],
 })

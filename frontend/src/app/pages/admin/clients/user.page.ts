@@ -57,16 +57,12 @@ export class UsersPage implements OnInit {
     }
 
     onSearch() {
-        this.filters.update(f => ({ ...f, page: 1 }));
+        this.filters.update(f => ({ ...f, page: 1, name: this.searchTerm() }));
         this.fetchUsers();
     }
 
     filteredUsers() {
-        const term = this.searchTerm().toLowerCase();
-        return this.users().filter(user =>
-            user.name.toLowerCase().includes(term) ||
-            user.cpf?.includes(term)
-        );
+        return this.users();
     }
 
     isAdmin(user: User): boolean {

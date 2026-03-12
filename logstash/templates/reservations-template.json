@@ -1,0 +1,31 @@
+{
+  "index_patterns": ["reservations*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+        "reservation_id": { "type": "keyword" },
+        "idempotencyKey": { "type": "keyword" },
+        "action": { "type": "keyword" },
+        "keycloackClientId": { "type": "keyword" },
+        "bookCopyId": { "type": "keyword" },
+        "bookId": { "type": "keyword" },
+        "bookTitle": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "bookAuthor": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "bookImageUrl": { "type": "keyword", "index": false },
+        "bookImage": { "type": "keyword", "index": false },
+        "reservedAt": { "type": "date" },
+        "dueDate": { "type": "date" },
+        "returnedAt": { "type": "date" },
+        "isReturned": { "type": "boolean" },
+        "status": { "type": "keyword" },
+        "daysLate": { "type": "integer" },
+        "fineAmount": { "type": "scaled_float", "scaling_factor": 100 },
+        "ts": { "type": "date" }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject } from "@angular/core";
-import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
-import { NgxMaskDirective } from "ngx-mask";
+import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { NgxMaskDirective, provideNgxMask } from "ngx-mask";
+import { CpfValidator } from "../../../shared/validators/cpf.validator";
 
 export interface LoginCredentials {
     username: string;
@@ -11,6 +12,7 @@ export interface LoginCredentials {
     selector: "app-login-form",
     standalone: true,
     imports: [ReactiveFormsModule, NgxMaskDirective],
+    providers: [provideNgxMask()],
     templateUrl: "./login-form.component.html",
 })
 export class LoginFormComponent {
@@ -28,8 +30,8 @@ export class LoginFormComponent {
     }
 
     form = this.fb.group({
-        cpf: [""],
-        password: [""],
+        cpf: ["", [Validators.required, CpfValidator.validate]],
+        password: ["", [Validators.required]],
     });
 
     onSubmit() {
@@ -40,6 +42,8 @@ export class LoginFormComponent {
             const password = this.form.get("password")?.value || "";
             
             this.loginSubmit.emit({ username, password });
+        } else {
+            this.form.markAllAsTouched();
         }
     }
 }

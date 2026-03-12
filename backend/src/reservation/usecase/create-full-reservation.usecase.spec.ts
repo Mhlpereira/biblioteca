@@ -62,6 +62,10 @@ describe('CreateFullReservationUseCase', () => {
       }),
     };
 
+    const mockEventProducer = {
+      emitReservationEvent: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {
@@ -71,6 +75,7 @@ describe('CreateFullReservationUseCase', () => {
               mockReservationRepository,
               mockBookCopyRepository,
               mockDataSource as never,
+              mockEventProducer as never,
             ),
         },
       ],

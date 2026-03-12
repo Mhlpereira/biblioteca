@@ -42,6 +42,7 @@ export class BookCopyRepository implements BookCopyRepositoryOutPort {
         book: { id: bookId },
         status: BookCopyStatus.AVAILABLE,
       },
+      relations: ['book'],
     });
   }
 

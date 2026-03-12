@@ -2,6 +2,7 @@ export interface FindByUserIdOutput {
   id: string;
   bookTitle: string;
   bookImage: string | null;
+  author: string;
   reservedAt: Date;
   dueDate: Date;
   returnedAt: Date | null;

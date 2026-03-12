@@ -19,6 +19,7 @@ import { RemoveReservationUseCase } from "./usecase/remove-reservation.usecase";
 import { UpdateReservationUseCase } from "./usecase/update-reservation.usecase";
 import { FindByIdReservationUseCase } from "./usecase/find-by-id-reservation.usecase";
 import { Roles } from "../auth/decorators/roles.decorator";
+import { ReturnBookUseCase } from "./usecase/return-book.usecase";
 
 @Controller("reservation")
 export class ReservationController {
@@ -30,6 +31,7 @@ export class ReservationController {
         private readonly removeReservation: RemoveReservationUseCase,
         private readonly updateReservation: UpdateReservationUseCase,
         private readonly findByIdReservation: FindByIdReservationUseCase,
+        private readonly returnBookUseCase: ReturnBookUseCase,
 
     ) {}
 
@@ -37,15 +39,23 @@ export class ReservationController {
     @HttpCode(200)
     @UseGuards(JwtAuthGuard)
     async findAuthClientReservations(
-        @CurrentUser() user: AuthUser
+        @CurrentUser() user: AuthUser,
+        @Query() query: FindReservationDto
     ): Promise<PaginatedResponseDto<FindReservationResponseDto>> {
-        return this.findByUserIdReservation.execute(user.keycloakId);
+        return this.findByUserIdReservation.execute(user.keycloakId, query);
     }
 
     @Post()
     @HttpCode(201)
-    async create(@Body() createReservationDto: CreateReservationDto) {
-        return this.createReservation.execute(createReservationDto);
+    @UseGuards(JwtAuthGuard)
+    async create(
+        @Body() createReservationDto: CreateReservationDto,
+        @CurrentUser() user: AuthUser
+    ) {
+        return this.createReservation.execute({
+            keycloackClientId: user.keycloakId,
+            ...createReservationDto
+        });
     }
 
     @Get()
@@ -65,7 +75,10 @@ export class ReservationController {
 
     @Post("return")
     @HttpCode(200)
-    async returnBook() {}
+    @UseGuards(JwtAuthGuard)
+    async returnBook(@Body() params: ReturnReservetionDto) {
+        return this.returnBookUseCase.execute(params);
+    }
 
     @Patch(":id")
     @HttpCode(200)

@@ -7,6 +7,7 @@ import { ReservationStatus } from '../enum/reservation-status.enum';
 import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
 import { Reservation } from '../entities/reservation.entity';
 import { UpdateReservationInput } from '../ports/in/update-reservation.in';
+import { ReservationEventProducer } from '../../infra/database/kafka/producer/reservation-event.producer';
 
 describe('UpdateReservationUseCase', () => {
   let useCase: UpdateReservationUseCase;
@@ -62,11 +63,14 @@ describe('UpdateReservationUseCase', () => {
       findAllByBook: jest.fn(),
     };
 
+    const mockEventProducer = { emitReservationEvent: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateReservationUseCase,
         { provide: 'ReservationOutPort', useValue: mockReservationRepository },
         { provide: 'BookCopyRepositoryOutPort', useValue: mockBookCopyRepository },
+        { provide: ReservationEventProducer, useValue: mockEventProducer },
       ],
     }).compile();
 

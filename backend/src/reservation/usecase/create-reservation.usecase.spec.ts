@@ -14,7 +14,7 @@ describe('CreateReservationUseCase', () => {
   let reservationRepository: jest.Mocked<ReservationOutPort>;
   let bookCopyRepository: jest.Mocked<BookCopyRepositoryOutPort>;
   let mockDataSource: { transaction: jest.Mock };
-  let mockKafkaClient: { emit: jest.Mock };
+  let mockEventProducer: { emitReservationEvent: jest.Mock };
 
   const mockBook = {
     id: '01HJQZ5R3N7MTXVGQE5J8K9M0P',
@@ -74,8 +74,8 @@ describe('CreateReservationUseCase', () => {
       }),
     };
 
-    mockKafkaClient = {
-      emit: jest.fn(),
+    mockEventProducer = {
+      emitReservationEvent: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -84,7 +84,6 @@ describe('CreateReservationUseCase', () => {
         { provide: 'ReservationOutPort', useValue: mockReservationRepository },
         { provide: 'BookCopyRepositoryOutPort', useValue: mockBookCopyRepository },
         { provide: 'DATASOURCE', useValue: mockDataSource },
-        { provide: 'KAFKA_SERVICE', useValue: mockKafkaClient },
       ],
     })
       .overrideProvider(CreateReservationUseCase)
@@ -94,7 +93,7 @@ describe('CreateReservationUseCase', () => {
             mockReservationRepository,
             mockBookCopyRepository,
             mockDataSource as never,
-            mockKafkaClient,
+            mockEventProducer as never,
           );
           return instance;
         },
@@ -204,12 +203,10 @@ describe('CreateReservationUseCase', () => {
 
       await useCase.execute(input);
 
-      expect(mockKafkaClient.emit).toHaveBeenCalledWith('reservation.created', {
-        id: createdReservation.id,
-        keycloackClientId: 'user-123',
-        reservedAt: createdReservation.reservedAt,
-        dueDate: createdReservation.dueDate,
-      });
+      expect(mockEventProducer.emitReservationEvent).toHaveBeenCalledWith(
+        createdReservation,
+        'created',
+      );
     });
 
     it('should execute transaction with save and update', async () => {

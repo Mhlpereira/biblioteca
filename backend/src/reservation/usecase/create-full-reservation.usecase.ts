@@ -9,6 +9,7 @@ import { ReservationDetailOutput } from '../ports/out/reservation-detail-output'
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { BookCopy } from '../../book-copy/entities/book-copy.entity';
 import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
+import { ReservationEventProducer } from '../../infra/database/kafka/producer/reservation-event.producer';
 
 
 @Injectable()
@@ -22,6 +23,8 @@ export class CreateFullReservationUseCase {
 
     @InjectDataSource()
     private readonly dataSource: DataSource,
+
+    private readonly reservationEventProducer: ReservationEventProducer,
   ) {}
 
   async execute(input: CreateFullReservationInput): Promise<ReservationDetailOutput> {
@@ -53,16 +56,19 @@ export class CreateFullReservationUseCase {
       await manager.update(BookCopy, bookCopy.id, { status: newCopyStatus });
     });
 
+    const saved = await reservation;
+    await this.reservationEventProducer.emitReservationEvent(saved, 'created');
+
     return {
-      id: (await reservation).id,
+      id: saved.id,
       keycloackClientId: input.keycloackClientId,
       bookCopyId: bookCopy.id,
-      reservedAt: (await reservation).reservedAt,
-      dueDate: (await reservation).dueDate,
-      returnedAt: (await reservation).returnedAt,
-      status: (await reservation).status,
-      daysLate: (await reservation).daysLate,
-      fineAmount: (await reservation).fineAmount,
+      reservedAt: saved.reservedAt,
+      dueDate: saved.dueDate,
+      returnedAt: saved.returnedAt,
+      status: saved.status,
+      daysLate: saved.daysLate,
+      fineAmount: saved.fineAmount,
     };
   }
 }

@@ -31,6 +31,35 @@
             Meus Empréstimos
         </h2>
 
+        <form class="mb-4 flex flex-col sm:flex-row gap-2" (submit)="$event.preventDefault(); onSearch(searchInput.value)">
+            <input
+                #searchInput
+                type="text"
+                [value]="searchQuery"
+                placeholder="Buscar por titulo, autor ou ID da reserva"
+                class="w-full sm:max-w-lg rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+
+            <div class="flex gap-2">
+                <button
+                    type="submit"
+                    class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                    Buscar
+                </button>
+
+                @if (searchQuery) {
+                <button
+                    type="button"
+                    (click)="clearSearch(searchInput)"
+                    class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                    Limpar
+                </button>
+                }
+            </div>
+        </form>
+
         <div class="mb-6 border-b border-slate-200">
             <nav class="flex gap-4" aria-label="Tabs">
                 <button
@@ -112,11 +141,17 @@
 
                     <div class="flex gap-4 mb-3">
                         <div class="w-16 h-24 flex-shrink-0 bg-gray-200 rounded overflow-hidden relative shadow-sm">
+                            @if (res.bookImage || res.bookImageUrl) {
                             <img
-                                [src]="res.bookImage || 'assets/placeholder-book.png'"
+                                [src]="res.bookImage || res.bookImageUrl"
                                 alt="Capa"
                                 class="w-full h-full object-cover"
                             />
+                            } @else {
+                            <div class="w-full h-full flex items-center justify-center text-[10px] font-semibold text-slate-500 bg-slate-100 px-1 text-center">
+                                Sem capa
+                            </div>
+                            }
                         </div>
 
                         <div class="flex-1">

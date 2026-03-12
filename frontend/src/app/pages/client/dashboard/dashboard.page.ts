@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from "@angular/core";
+import { Component, inject, OnInit, ChangeDetectorRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterLink } from "@angular/router";
 import { UserStore } from "../../../core/stores/user.store";
@@ -14,6 +14,7 @@ import { PaginatedResult } from "../../../core/model/pagination.model";
 })
 export class DashboardPage implements OnInit {
     private reservationService = inject(ReservationService);
+    private cdr = inject(ChangeDetectorRef);
     public userStore = inject(UserStore);
     
     reservations: Reservation[] = [];
@@ -23,7 +24,8 @@ export class DashboardPage implements OnInit {
     limit = 9;
     total = 0;
     lastPage = 1;
-    filterStatus: 'ACTIVE' | 'RETURNED' | 'ALL' = 'ACTIVE';
+    searchQuery = "";
+    filterStatus: 'ACTIVE' | 'RETURNED' | 'ALL' = 'ALL'; 
 
     ngOnInit() {
         this.fetchReservations(1);
@@ -31,6 +33,7 @@ export class DashboardPage implements OnInit {
 
     setFilter(status: 'ACTIVE' | 'RETURNED' | 'ALL') {
         this.filterStatus = status;
+        this.page = 1;
     }
 
     getActiveCount(): number {
@@ -42,28 +45,63 @@ export class DashboardPage implements OnInit {
     }
 
     getFilteredReservations(): Reservation[] {
-        if (this.filterStatus === 'ALL') return this.reservations;
+        if (this.filterStatus === 'ALL') {
+            return this.reservations;
+        }
+        
         if (this.filterStatus === 'RETURNED') {
             return this.reservations.filter(r => r.status === 'RETURNED');
         }
+        
         return this.reservations.filter(r => r.status !== 'RETURNED');
+    }
+
+    private autoSelectBestFilter() {
+        const activeCount = this.getActiveCount();
+        const returnedCount = this.getReturnedCount();
+        
+        if (activeCount > 0) {
+            this.filterStatus = 'ACTIVE';
+        } else if (returnedCount > 0) {
+            this.filterStatus = 'RETURNED';
+        } else {
+            this.filterStatus = 'ALL';
+        }
+        
+        this.cdr.detectChanges();
     }
 
     fetchReservations(page = this.page) {
         this.isLoading = true;
-        this.reservationService.getMyReservations(page, this.limit).subscribe({
+        this.reservationService.getMyReservations(page, this.limit, this.searchQuery).subscribe({
             next: (res: PaginatedResult<Reservation>) => {
                 this.reservations = res.data;
                 this.total = res.meta.total;
                 this.page = res.meta.page;
                 this.lastPage = res.meta.lastPage;
                 this.isLoading = false;
+                if (page === 1 && this.filterStatus === 'ALL' && res.data.length > 0) {
+                    this.autoSelectBestFilter();
+                }
             },
             error: err => {
-                console.error("Erro ao buscar reservas", err);
+                console.error("Erro ao buscar reservas:", err);
                 this.isLoading = false;
             },
         });
+    }
+
+    onSearch(searchValue: string) {
+        this.searchQuery = searchValue.trim();
+        this.page = 1;
+        this.fetchReservations(1);
+    }
+
+    clearSearch(searchInput: HTMLInputElement) {
+        searchInput.value = "";
+        this.searchQuery = "";
+        this.page = 1;
+        this.fetchReservations(1);
     }
 
     nextPage() {

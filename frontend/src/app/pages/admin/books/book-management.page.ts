@@ -129,7 +129,7 @@ export class BookManagementPage implements OnInit, OnDestroy {
     handleDeleteBook(bookId: string) {
         if (!confirm("Tem certeza que deseja excluir este livro permanentemente?")) return;
         this.isLoading.set(true);
-        this.adminService.deleteUser(bookId).subscribe({
+        this.adminService.deleteBook(bookId).subscribe({
             next: () => {
                 alert("Livro excluído.");
                 this.loadData(1);

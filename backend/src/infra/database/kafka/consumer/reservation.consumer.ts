@@ -1,12 +1,14 @@
-import { Controller } from "@nestjs/common";
+import { Controller, Logger } from "@nestjs/common";
 import { MessagePattern, Payload } from "@nestjs/microservices";
 
 @Controller()
 export class ReservationConsumer {
-    constructor() {}
+    private readonly logger = new Logger(ReservationConsumer.name);
 
-    @MessagePattern("reservation.created")
-    async handleReservationCreated(@Payload() data: any) {
-        console.log("Mensagem recebida:", data);
+    @MessagePattern("reservations")
+    async handleReservationEvent(@Payload() data: any) {
+        this.logger.log(
+            `Evento de reserva recebido: [${data?.action}] reserva ${data?.id}`,
+        );
     }
 }

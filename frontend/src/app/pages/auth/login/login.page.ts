@@ -24,10 +24,15 @@ export class LoginPage implements OnInit {
 
     isLoading = false;
     errorMessage = "";
+    successMessage = "";
     private returnUrl = "/dashboard";
 
     ngOnInit() {
         this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/dashboard";
+
+        if (this.route.snapshot.queryParams["registered"] === "true") {
+            this.successMessage = "Conta criada com sucesso! Faça login para continuar.";
+        }
         
         if (this.authService.isAuthenticated()) {
             this.router.navigate([this.returnUrl]);

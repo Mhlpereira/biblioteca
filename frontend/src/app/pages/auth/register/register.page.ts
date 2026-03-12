@@ -23,13 +23,13 @@ export class RegisterPage {
 
     try {
       await this.authService.register(data);
-      this.router.navigate(['/login']);
+      this.router.navigate(['/login'], { queryParams: { registered: 'true' } });
     } catch (err: any) {
       this.isLoading = false;
       if (err?.status === 409) {
-        this.errorMessage = 'CPF já cadastrado.';
+        this.errorMessage = 'CPF ou e-mail já cadastrado.';
       } else {
-        this.errorMessage = err.error?.errorMessage || 'Erro ao criar conta. Tente novamente.';
+        this.errorMessage = err.error?.message || 'Erro ao criar conta. Tente novamente.';
       }
     }
   }

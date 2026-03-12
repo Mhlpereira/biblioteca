@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { Observable, map } from "rxjs";
 import { User } from "../core/model/user.model";
 import { API_BASE_URL } from "../core/constants/api.constants";
 import { FindClientParams } from "../core/model/client.model";
@@ -20,21 +20,18 @@ export class AdminService {
     findAll(filters: FindClientParams): Observable<PaginatedResult<User>> {
         let params = new HttpParams();
 
-        Object.keys(filters).forEach(key => {
-            const value = filters[key];
-            if (value !== undefined && value !== null && value !== "") {
-                params = params.set(key, value);
-            }
-        });
+        if (filters.page) params = params.set('page', filters.page);
+        if (filters.limit) params = params.set('limit', filters.limit);
+        if (filters.name) params = params.set('search', filters.name);
 
-        return this.http.get<PaginatedResult<User>>(`${this.API_URL}/clients`, {
+        return this.http.get<PaginatedResult<User>>(`${this.API_URL}/auth/users`, {
             params,
             withCredentials: true,
         });
     }
 
     deleteUser(userId: string): Observable<void> {
-        return this.http.delete<void>(`${this.API_URL}/${userId}`, { withCredentials: true });
+        return this.http.delete<void>(`${this.API_URL}/clients/${userId}`, { withCredentials: true });
     }
 
     //RESERVATION
@@ -50,10 +47,17 @@ export class AdminService {
             params = params.set("overdueOnly", 'true');
         }
 
-        return this.http.get<PaginatedResult<Reservation>>(`${this.API_URL}/reservation`, {
-            params,
-            withCredentials: true,
-        });
+        return this.http
+            .get<PaginatedResult<Reservation>>(`${this.API_URL}/reservation`, {
+                params,
+                withCredentials: true,
+            })
+            .pipe(
+                map((result) => ({
+                    ...result,
+                    data: result.data.map((reservation) => this.normalizeReservation(reservation)),
+                }))
+            );
     }
 
     getReservationsWithFilters(filters: ReservationFilters): Observable<PaginatedResult<Reservation>> {
@@ -77,10 +81,17 @@ export class AdminService {
             params = params.set("bookId", filters.bookId);
         }
 
-        return this.http.get<PaginatedResult<Reservation>>(`${this.API_URL}/reservation`, {
-            params,
-            withCredentials: true,
-        });
+        return this.http
+            .get<PaginatedResult<Reservation>>(`${this.API_URL}/reservation`, {
+                params,
+                withCredentials: true,
+            })
+            .pipe(
+                map((result) => ({
+                    ...result,
+                    data: result.data.map((reservation) => this.normalizeReservation(reservation)),
+                }))
+            );
     }
 
     createReservation() {}
@@ -105,5 +116,40 @@ export class AdminService {
         return this.http.patch<void>(`${this.API_URL}/books/${dto.bookId}/copies/remove`, dto, {
             withCredentials: true,
         });
+    }
+
+    deleteBook(bookId: string): Observable<void> {
+        return this.http.delete<void>(`${this.API_URL}/books/${bookId}`, { withCredentials: true });
+    }
+
+    deleteReservation(reservationId: string): Observable<void> {
+        return this.http.delete<void>(`${this.API_URL}/reservation/${reservationId}`, { withCredentials: true });
+    }
+
+    private normalizeReservation(reservation: Reservation): Reservation {
+        const raw = reservation as Reservation & {
+            bookAuthor?: string;
+            imageUrl?: string | null;
+        };
+
+        const isReturned = raw.isReturned ?? raw.status === "RETURNED";
+        const status = isReturned ? "RETURNED" : reservation.status;
+        const returnedAt = raw.returnedAt ?? null;
+        const bookImage = raw.bookImage ?? raw.bookImageUrl ?? raw.imageUrl ?? null;
+        const isOverdue = raw.isOverdue ?? (!isReturned && new Date(raw.dueDate).getTime() < Date.now());
+        const author = raw.author ?? raw.bookAuthor ?? "";
+
+        return {
+            ...reservation,
+            status,
+            isReturned,
+            returnedAt,
+            bookImage,
+            bookImageUrl: raw.bookImageUrl ?? bookImage,
+            isOverdue,
+            clientName: raw.clientName ?? raw.id,
+            author,
+            fineAmount: raw.fineAmount ?? null,
+        };
     }
 }

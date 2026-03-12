@@ -5,6 +5,7 @@ import { ReservationOutPort } from '../ports/reservation-out.port';
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { Reservation } from '../entities/reservation.entity';
 import { RemoveReservationInput } from '../ports/in/remove-reservation.in';
+import { ReservationEventProducer } from '../../infra/database/kafka/producer/reservation-event.producer';
 
 describe('RemoveReservationUseCase', () => {
   let useCase: RemoveReservationUseCase;
@@ -31,10 +32,13 @@ describe('RemoveReservationUseCase', () => {
       remove: jest.fn(),
     };
 
+    const mockEventProducer = { emitReservationEvent: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RemoveReservationUseCase,
         { provide: 'ReservationOutPort', useValue: mockReservationRepository },
+        { provide: ReservationEventProducer, useValue: mockEventProducer },
       ],
     }).compile();
 

@@ -1,6 +1,7 @@
 export interface ReservationFilters {
   page: number;
   limit: number;
+  search?: string;
   clientId?: string;
   bookId?: string;
   reservedAt?: string;

@@ -6,6 +6,7 @@ import { ReturnBookOutput } from '../ports/out/return-book-output';
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
 import { FINE_RULES } from '../../common/constants/fine.constants';
+import { ReservationEventProducer } from '../../infra/database/kafka/producer/reservation-event.producer';
 
 
 @Injectable()
@@ -16,6 +17,8 @@ export class ReturnBookUseCase {
 
     @Inject('BookCopyRepositoryOutPort')
     private readonly bookCopyRepository: BookCopyRepositoryOutPort,
+
+    private readonly reservationEventProducer: ReservationEventProducer,
   ) {}
 
   async execute(input: ReturnBookInput): Promise<ReturnBookOutput> {
@@ -46,6 +49,8 @@ export class ReturnBookUseCase {
     }
 
     const saved = await this.reservationRepository.save(reservation);
+
+    await this.reservationEventProducer.emitReservationEvent(saved, 'returned');
 
     return {
       id: saved.id,

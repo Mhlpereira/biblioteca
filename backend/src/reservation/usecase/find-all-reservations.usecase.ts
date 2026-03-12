@@ -21,6 +21,7 @@ export class FindAllReservationsUseCase {
     const result = await this.reservationRepository.findAll({
       page,
       limit,
+      search: input.search,
       clientId: input.clientId,
       bookId: input.bookId,
       reservedAt: input.reservedAt,

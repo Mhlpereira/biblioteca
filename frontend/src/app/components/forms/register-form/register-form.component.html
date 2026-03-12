@@ -31,12 +31,12 @@
             <label class="block text-sm font-medium text-slate-700">Nome</label>
             <input
                 type="text"
-                formControlName="name"
+                formControlName="firstName"
                 placeholder="João"
-                [class.border-red-300]="form.get('name')?.invalid && form.get('name')?.touched"
+                [class.border-red-300]="form.get('firstName')?.invalid && form.get('firstName')?.touched"
                 class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
             />
-            @if (form.get("name")?.invalid && form.get("name")?.touched) {
+            @if (form.get("firstName")?.invalid && form.get("firstName")?.touched) {
                 <div class="text-sm text-red-600">Obrigatório</div>
             }
         </div>
@@ -54,6 +54,27 @@
                 <div class="text-sm text-red-600">Obrigatório</div>
             }
         </div>
+    </div>
+
+    <div class="space-y-1">
+        <label class="block text-sm font-medium text-slate-700">E-mail</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+            </div>
+            <input
+                type="email"
+                formControlName="email"
+                placeholder="joao@exemplo.com"
+                [class.border-red-300]="form.get('email')?.invalid && form.get('email')?.touched"
+                class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+            />
+        </div>
+        @if (form.get("email")?.invalid && form.get("email")?.touched) {
+            <div class="text-sm text-red-600">E-mail inválido</div>
+        }
     </div>
 
     <div class="space-y-1">

@@ -5,6 +5,10 @@ import { PaginationDto } from "../../../common/dto/pagination.dto";
 export class FindReservationDto extends PaginationDto{
     @IsOptional()
     @IsString()
+    search?: string;
+
+    @IsOptional()
+    @IsString()
     keycloackClientId?: string;
 
     @IsOptional()

@@ -5,6 +5,7 @@ import { UpdateReservationInput } from '../ports/in/update-reservation.in';
 import { ReservationDetailOutput } from '../ports/out/reservation-detail-output';
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
+import { ReservationEventProducer } from '../../infra/database/kafka/producer/reservation-event.producer';
 
 
 @Injectable()
@@ -15,6 +16,8 @@ export class UpdateReservationUseCase {
 
     @Inject('BookCopyRepositoryOutPort')
     private readonly bookCopyRepository: BookCopyRepositoryOutPort,
+
+    private readonly reservationEventProducer: ReservationEventProducer,
   ) {}
 
   async execute(input: UpdateReservationInput): Promise<ReservationDetailOutput> {
@@ -34,6 +37,9 @@ export class UpdateReservationUseCase {
     }
 
     const saved = await this.reservationRepository.save(reservation);
+
+    const action = saved.status === ReservationStatus.RETURNED ? 'returned' : 'updated';
+    await this.reservationEventProducer.emitReservationEvent(saved, action);
 
     return {
       id: saved.id,

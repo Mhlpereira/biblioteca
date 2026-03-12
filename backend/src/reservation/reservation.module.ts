@@ -13,6 +13,7 @@ import { FindByUserIdReservationUseCase } from "./usecase/find-by-user-id-reserv
 import { RemoveReservationUseCase } from "./usecase/remove-reservation.usecase";
 import { UpdateReservationUseCase } from "./usecase/update-reservation.usecase";
 import { FindByIdReservationUseCase } from "./usecase/find-by-id-reservation.usecase";
+import { ReturnBookUseCase } from "./usecase/return-book.usecase";
 
 @Module({
     imports: [TypeOrmModule.forFeature([Reservation]), BookCopyModule, AuthModule, KafkaModule],
@@ -29,6 +30,7 @@ import { FindByIdReservationUseCase } from "./usecase/find-by-id-reservation.use
         RemoveReservationUseCase,
         UpdateReservationUseCase,
         FindByIdReservationUseCase,
+        ReturnBookUseCase,
     ],
     exports: ['ReservationOutPort'],
 })

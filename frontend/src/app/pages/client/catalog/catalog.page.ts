@@ -35,6 +35,16 @@ export class CatalogPage implements OnInit {
     }
 
     openReservationModal(book: Book) {
+        const hasAvailableCopies =
+            typeof book.availableCopies === "number"
+                ? book.availableCopies > 0
+                : (book as Partial<Book>).hasAvailable !== false;
+
+        if (!hasAvailableCopies) {
+            alert("Este livro está sem cópias disponíveis no momento.");
+            return;
+        }
+
         this.selectedBook.set(book);
     }
 
@@ -56,7 +66,8 @@ export class CatalogPage implements OnInit {
             },
             error: err => {
                 console.error(err);
-                alert("Erro ao realizar reserva.");
+                const errorMessage = err?.error?.message || err?.error?.errorMessage || "Erro ao realizar reserva.";
+                alert(errorMessage);
                 this.isLoading = false;
             },
         });

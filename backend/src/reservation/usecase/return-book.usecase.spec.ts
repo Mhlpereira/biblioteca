@@ -8,6 +8,7 @@ import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
 import { Reservation } from '../entities/reservation.entity';
 import { ReturnBookInput } from '../ports/in/return-book.in';
 import { FINE_RULES } from '../../common/constants/fine.constants';
+import { ReservationEventProducer } from '../../infra/database/kafka/producer/reservation-event.producer';
 
 describe('ReturnBookUseCase', () => {
   let useCase: ReturnBookUseCase;
@@ -63,11 +64,14 @@ describe('ReturnBookUseCase', () => {
       findAllByBook: jest.fn(),
     };
 
+    const mockEventProducer = { emitReservationEvent: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReturnBookUseCase,
         { provide: 'ReservationOutPort', useValue: mockReservationRepository },
         { provide: 'BookCopyRepositoryOutPort', useValue: mockBookCopyRepository },
+        { provide: ReservationEventProducer, useValue: mockEventProducer },
       ],
     }).compile();
 
