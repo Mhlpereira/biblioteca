@@ -13,12 +13,18 @@ describe("JwtAuthGuard", () => {
     const buildUserinfo = (payload: Record<string, unknown>): string =>
         Buffer.from(JSON.stringify(payload)).toString("base64");
 
+    const buildJwtToken = (payload: Record<string, unknown>): string => {
+        const header = buildUserinfo({ alg: "none", typ: "JWT" });
+        const body = buildUserinfo(payload);
+        return `${header}.${body}.signature`;
+    };
+
     const adminPayload = {
         sub: "user-123",
         email: "admin@test.com",
         given_name: "Admin",
         family_name: "User",
-        cpf: "12345678900",
+        preferred_username: "12345678900",
         realm_access: { roles: ["ADMIN"] },
     };
 
@@ -27,13 +33,14 @@ describe("JwtAuthGuard", () => {
         email: "user@test.com",
         given_name: "Normal",
         family_name: "User",
-        cpf: "98765432100",
+        preferred_username: "98765432100",
         realm_access: { roles: ["USER"] },
     };
 
     const createContext = (headers: Record<string, string> = {}): ExecutionContext => {
         const request = {
-            get: jest.fn((key: string) => headers[key]),
+            url: "/test",
+            get: jest.fn((key: string) => headers[key] ?? headers[key.toLowerCase()]),
             user: undefined,
         };
         return {
@@ -77,7 +84,7 @@ describe("JwtAuthGuard", () => {
         expect(result).toBe(true);
     });
 
-    it("should throw UnauthorizedException when X-Userinfo header is missing", () => {
+    it("should throw UnauthorizedException when Authorization header is missing", () => {
         reflector.getAllAndOverride.mockReturnValueOnce(false);
 
         expect(() => guard.canActivate(createContext())).toThrow(UnauthorizedException);
@@ -88,7 +95,7 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce(false)
             .mockReturnValueOnce(undefined);
 
-        const ctx = createContext({ "X-Userinfo": buildUserinfo(adminPayload) });
+        const ctx = createContext({ Authorization: `Bearer ${buildJwtToken(adminPayload)}` });
         const result = guard.canActivate(ctx);
         const request = ctx.switchToHttp().getRequest();
 
@@ -109,7 +116,7 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce(false)
             .mockReturnValueOnce(undefined);
 
-        const ctx = createContext({ "X-Userinfo": buildUserinfo(userPayload) });
+        const ctx = createContext({ Authorization: `Bearer ${buildJwtToken(userPayload)}` });
         guard.canActivate(ctx);
         const request = ctx.switchToHttp().getRequest();
 
@@ -122,7 +129,7 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce(undefined);
 
         const result = guard.canActivate(
-            createContext({ "X-Userinfo": buildUserinfo(adminPayload) }),
+            createContext({ Authorization: `Bearer ${buildJwtToken(adminPayload)}` }),
         );
 
         expect(result).toBe(true);
@@ -134,7 +141,7 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce([]);
 
         const result = guard.canActivate(
-            createContext({ "X-Userinfo": buildUserinfo(adminPayload) }),
+            createContext({ Authorization: `Bearer ${buildJwtToken(adminPayload)}` }),
         );
 
         expect(result).toBe(true);
@@ -146,7 +153,7 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce([Role.ADMIN]);
 
         const result = guard.canActivate(
-            createContext({ "X-Userinfo": buildUserinfo(adminPayload) }),
+            createContext({ Authorization: `Bearer ${buildJwtToken(adminPayload)}` }),
         );
 
         expect(result).toBe(true);
@@ -159,7 +166,7 @@ describe("JwtAuthGuard", () => {
 
         expect(() =>
             guard.canActivate(
-                createContext({ "X-Userinfo": buildUserinfo(userPayload) }),
+                createContext({ Authorization: `Bearer ${buildJwtToken(userPayload)}` }),
             ),
         ).toThrow(UnauthorizedException);
     });
@@ -171,7 +178,7 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce(false)
             .mockReturnValueOnce(undefined);
 
-        const ctx = createContext({ "X-Userinfo": buildUserinfo(payload) });
+        const ctx = createContext({ Authorization: `Bearer ${buildJwtToken(payload)}` });
         guard.canActivate(ctx);
         const request = ctx.switchToHttp().getRequest();
 
@@ -188,10 +195,29 @@ describe("JwtAuthGuard", () => {
             .mockReturnValueOnce(false)
             .mockReturnValueOnce(undefined);
 
-        const ctx = createContext({ "X-Userinfo": buildUserinfo(payload) });
+        const ctx = createContext({ Authorization: `Bearer ${buildJwtToken(payload)}` });
         guard.canActivate(ctx);
         const request = ctx.switchToHttp().getRequest();
 
         expect(request.user.role).toBe(Role.USER);
     });
+
+    it("should log X-Userinfo header as present when both headers are set", () => {
+        reflector.getAllAndOverride
+            .mockReturnValueOnce(false)
+            .mockReturnValueOnce(undefined);
+
+        const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+        const ctx = createContext({
+            Authorization: `Bearer ${buildJwtToken(adminPayload)}`,
+            "X-Userinfo": "some-encoded-userinfo",
+        });
+
+        const result = guard.canActivate(ctx);
+
+        expect(result).toBe(true);
+        consoleLogSpy.mockRestore();
+    });
 });
+

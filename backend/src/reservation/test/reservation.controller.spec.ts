@@ -7,6 +7,7 @@ import { FindByUserIdReservationUseCase } from '../usecase/find-by-user-id-reser
 import { RemoveReservationUseCase } from '../usecase/remove-reservation.usecase';
 import { UpdateReservationUseCase } from '../usecase/update-reservation.usecase';
 import { FindByIdReservationUseCase } from '../usecase/find-by-id-reservation.usecase';
+import { ReturnBookUseCase } from '../usecase/return-book.usecase';
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { AuthUser } from '../../auth/types/auth-user.types';
 
@@ -19,6 +20,7 @@ describe('ReservationController', () => {
   let removeReservation: jest.Mocked<RemoveReservationUseCase>;
   let updateReservation: jest.Mocked<UpdateReservationUseCase>;
   let findByIdReservation: jest.Mocked<FindByIdReservationUseCase>;
+  let returnBookUseCase: jest.Mocked<ReturnBookUseCase>;
 
   beforeEach(async () => {
     const mockCreateFullReservation = { execute: jest.fn() };
@@ -28,6 +30,7 @@ describe('ReservationController', () => {
     const mockRemoveReservation = { execute: jest.fn() };
     const mockUpdateReservation = { execute: jest.fn() };
     const mockFindByIdReservation = { execute: jest.fn() };
+    const mockReturnBookUseCase = { execute: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReservationController],
@@ -39,6 +42,7 @@ describe('ReservationController', () => {
         { provide: RemoveReservationUseCase, useValue: mockRemoveReservation },
         { provide: UpdateReservationUseCase, useValue: mockUpdateReservation },
         { provide: FindByIdReservationUseCase, useValue: mockFindByIdReservation },
+        { provide: ReturnBookUseCase, useValue: mockReturnBookUseCase },
       ],
     }).compile();
 
@@ -50,6 +54,7 @@ describe('ReservationController', () => {
     removeReservation = module.get(RemoveReservationUseCase);
     updateReservation = module.get(UpdateReservationUseCase);
     findByIdReservation = module.get(FindByIdReservationUseCase);
+    returnBookUseCase = module.get(ReturnBookUseCase);
   });
 
   afterEach(() => {
@@ -63,6 +68,7 @@ describe('ReservationController', () => {
   describe('findAuthClientReservations', () => {
     it('should return reservations for authenticated user', async () => {
       const user = { keycloakId: 'user-123' } as AuthUser;
+      const query = { page: 1, limit: 10 };
       const expectedResult = {
         data: [{ id: 'res-1', bookTitle: 'Clean Code' }],
         meta: { total: 1, page: 1, lastPage: 1 },
@@ -70,16 +76,17 @@ describe('ReservationController', () => {
 
       findByUserIdReservation.execute.mockResolvedValue(expectedResult as never);
 
-      const result = await controller.findAuthClientReservations(user);
+      const result = await controller.findAuthClientReservations(user, query);
 
-      expect(findByUserIdReservation.execute).toHaveBeenCalledWith('user-123');
+      expect(findByUserIdReservation.execute).toHaveBeenCalledWith('user-123', query);
       expect(result).toEqual(expectedResult);
     });
   });
 
   describe('create', () => {
     it('should create a reservation', async () => {
-      const dto = { keycloackClientId: 'user-123', bookId: 'book-1' };
+      const dto = { bookId: 'book-1' };
+      const user = { keycloakId: 'user-123' } as AuthUser;
       const expectedResult = {
         id: 'res-1',
         keycloackClientId: 'user-123',
@@ -91,9 +98,29 @@ describe('ReservationController', () => {
 
       createReservation.execute.mockResolvedValue(expectedResult as never);
 
-      const result = await controller.create(dto);
+      const result = await controller.create(dto, user);
 
-      expect(createReservation.execute).toHaveBeenCalledWith(dto);
+      expect(createReservation.execute).toHaveBeenCalledWith({
+        keycloackClientId: 'user-123',
+        bookId: 'book-1',
+      });
+      expect(result).toEqual(expectedResult);
+    });
+  });
+
+  describe('returnBook', () => {
+    it('should return a book reservation', async () => {
+      const params = { id: 'res-1' };
+      const expectedResult = {
+        id: 'res-1',
+        status: ReservationStatus.RETURNED,
+      };
+
+      returnBookUseCase.execute.mockResolvedValue(expectedResult as never);
+
+      const result = await controller.returnBook(params);
+
+      expect(returnBookUseCase.execute).toHaveBeenCalledWith(params);
       expect(result).toEqual(expectedResult);
     });
   });

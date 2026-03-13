@@ -1,11 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { FindByUserIdReservationUseCase } from './find-by-user-id-reservation.usecase';
 import { ReservationOutPort } from '../ports/reservation-out.port';
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
 import { Reservation } from '../entities/reservation.entity';
-import { FINE_RULES } from '../../common/constants/fine.constants';
 
 describe('FindByUserIdReservationUseCase', () => {
   let useCase: FindByUserIdReservationUseCase;
@@ -101,35 +99,53 @@ describe('FindByUserIdReservationUseCase', () => {
 
   describe('execute', () => {
     it('should return user reservations successfully', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+      reservationRepository.findAll.mockResolvedValue({
         data: [mockActiveReservation],
         meta: { total: 1, page: 1, lastPage: 1 },
       });
 
       const result = await useCase.execute('user-123');
 
-      expect(reservationRepository.findByUserId).toHaveBeenCalledWith('user-123');
+      expect(reservationRepository.findAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        search: undefined,
+        clientId: 'user-123',
+        bookId: undefined,
+        status: undefined,
+        overdueOnly: undefined,
+      });
       expect(result.data.length).toBe(1);
       expect(result.data[0].id).toBe(mockActiveReservation.id);
     });
 
-    it('should throw NotFoundException when no reservations found', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+    it('should return empty list when no reservations found', async () => {
+      reservationRepository.findAll.mockResolvedValue({
         data: [],
         meta: { total: 0, page: 1, lastPage: 1 },
       });
 
-      await expect(useCase.execute('user-999')).rejects.toThrow(NotFoundException);
+      const result = await useCase.execute('user-999');
+
+      expect(result).toEqual({
+        data: [],
+        meta: { total: 0, page: 1, lastPage: 1 },
+      });
     });
 
-    it('should throw NotFoundException when result is null', async () => {
-      reservationRepository.findByUserId.mockResolvedValue(null as never);
+    it('should return empty list when result is null', async () => {
+      reservationRepository.findAll.mockResolvedValue(null as never);
 
-      await expect(useCase.execute('user-999')).rejects.toThrow(NotFoundException);
+      const result = await useCase.execute('user-999');
+
+      expect(result).toEqual({
+        data: [],
+        meta: { total: 0, page: 1, lastPage: 1 },
+      });
     });
 
     it('should mark overdue reservations correctly', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+      reservationRepository.findAll.mockResolvedValue({
         data: [mockOverdueReservation],
         meta: { total: 1, page: 1, lastPage: 1 },
       });
@@ -141,7 +157,7 @@ describe('FindByUserIdReservationUseCase', () => {
     });
 
     it('should not mark returned reservations as overdue', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+      reservationRepository.findAll.mockResolvedValue({
         data: [mockReturnedReservation],
         meta: { total: 1, page: 1, lastPage: 1 },
       });
@@ -153,7 +169,7 @@ describe('FindByUserIdReservationUseCase', () => {
     });
 
     it('should not mark active non-overdue reservations as overdue', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+      reservationRepository.findAll.mockResolvedValue({
         data: [mockActiveReservation],
         meta: { total: 1, page: 1, lastPage: 1 },
       });
@@ -165,7 +181,7 @@ describe('FindByUserIdReservationUseCase', () => {
     });
 
     it('should map reservation fields correctly', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+      reservationRepository.findAll.mockResolvedValue({
         data: [mockActiveReservation],
         meta: { total: 1, page: 1, lastPage: 1 },
       });
@@ -181,7 +197,7 @@ describe('FindByUserIdReservationUseCase', () => {
     });
 
     it('should return meta information', async () => {
-      reservationRepository.findByUserId.mockResolvedValue({
+      reservationRepository.findAll.mockResolvedValue({
         data: [mockActiveReservation],
         meta: { total: 1, page: 1, lastPage: 1 },
       });
@@ -192,7 +208,7 @@ describe('FindByUserIdReservationUseCase', () => {
     });
 
     it('should propagate repository errors', async () => {
-      reservationRepository.findByUserId.mockRejectedValue(new Error('Database error'));
+      reservationRepository.findAll.mockRejectedValue(new Error('Database error'));
 
       await expect(useCase.execute('user-123')).rejects.toThrow('Database error');
     });

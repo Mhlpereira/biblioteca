@@ -169,6 +169,7 @@ describe('BookCopyRepository', () => {
           book: { id: bookId },
           status: BookCopyStatus.AVAILABLE,
         },
+        relations: ['book'],
       });
       expect(result).toEqual(mockBookCopy);
     });

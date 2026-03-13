@@ -6,6 +6,7 @@ import { Reservation } from '../entities/reservation.entity';
 import { ReservationStatus } from '../enum/reservation-status.enum';
 import { BookCopyStatus } from '../../book-copy/enum/book-status.enum';
 import { ReservationFilters } from '../ports/in/reservation-filters.in';
+import { ConfigService } from '@nestjs/config';
 
 describe('ReservationRepository', () => {
   let repository: ReservationRepository;
@@ -57,6 +58,10 @@ describe('ReservationRepository', () => {
         {
           provide: getRepositoryToken(Reservation),
           useValue: mockOrmRepository,
+        },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
         },
       ],
     }).compile();
@@ -311,4 +316,291 @@ describe('ReservationRepository', () => {
       expect(result.meta.lastPage).toBe(3);
     });
   });
+
+  describe('findAll (Elasticsearch path)', () => {
+    const mockFetch = jest.fn();
+    let repositoryWithElastic: ReservationRepository;
+    let ormRepositoryWithElastic: jest.Mocked<Repository<Reservation>>;
+
+    const elasticHit = {
+      _source: {
+        reservation_id: 'es-res-id',
+        keycloackClientId: 'user-es',
+        reservedAt: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+        returnedAt: null,
+        status: ReservationStatus.ACTIVE,
+        fineAmount: null,
+        daysLate: null,
+        bookCopyId: 'copy-es',
+        bookId: 'book-es',
+        bookTitle: 'ES Book',
+        bookAuthor: 'ES Author',
+        bookImageUrl: 'http://img.es/img.png',
+      },
+    };
+
+    const makeElasticResponse = (hits: unknown[], total = hits.length) => ({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({
+        hits: {
+          total: { value: total },
+          hits,
+        },
+      }),
+      text: jest.fn(),
+    });
+
+    beforeEach(async () => {
+      global.fetch = mockFetch;
+
+      const mockOrmRepository = {
+        create: jest.fn(),
+        save: jest.fn(),
+        findOne: jest.fn(),
+        find: jest.fn(),
+        remove: jest.fn(),
+        createQueryBuilder: jest.fn(),
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          ReservationRepository,
+          {
+            provide: getRepositoryToken(Reservation),
+            useValue: mockOrmRepository,
+          },
+          {
+            provide: ConfigService,
+            useValue: { get: jest.fn().mockReturnValue('http://elasticsearch:9200') },
+          },
+        ],
+      }).compile();
+
+      repositoryWithElastic = module.get<ReservationRepository>(ReservationRepository);
+      ormRepositoryWithElastic = module.get(getRepositoryToken(Reservation));
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should return results from Elasticsearch when available', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([elasticHit]));
+
+      const filters: ReservationFilters = { page: 1, limit: 10 };
+      const result = await repositoryWithElastic.findAll(filters);
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].id).toBe('es-res-id');
+      expect(result.meta.total).toBe(1);
+    });
+
+    it('should fall back to DB when Elasticsearch fails', async () => {
+      mockFetch.mockRejectedValue(new Error('Connection refused'));
+
+      const mockQb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1),
+        getMany: jest.fn().mockResolvedValue([mockReservation]),
+      };
+      ormRepositoryWithElastic.createQueryBuilder.mockReturnValue(mockQb as never);
+
+      const filters: ReservationFilters = { page: 1, limit: 10 };
+      const result = await repositoryWithElastic.findAll(filters);
+
+      expect(result.data).toEqual([mockReservation]);
+    });
+
+    it('should throw when ELASTIC_URL is not configured', async () => {
+      const module = await Test.createTestingModule({
+        providers: [
+          ReservationRepository,
+          {
+            provide: getRepositoryToken(Reservation),
+            useValue: { createQueryBuilder: jest.fn() },
+          },
+          {
+            provide: ConfigService,
+            useValue: { get: jest.fn().mockReturnValue(undefined) },
+          },
+        ],
+      }).compile();
+
+      const repoNoElastic = module.get<ReservationRepository>(ReservationRepository);
+      const mockQb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      module.get(getRepositoryToken(Reservation)).createQueryBuilder.mockReturnValue(mockQb as never);
+
+      const result = await repoNoElastic.findAll({ page: 1, limit: 10 });
+      expect(result.data).toEqual([]);
+    });
+
+    it('should apply search filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, search: 'clean code' });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.must[0]).toMatchObject({
+        multi_match: { query: 'clean code' },
+      });
+    });
+
+    it('should apply clientId filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, clientId: 'user-123' });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.filter).toContainEqual({ term: { keycloackClientId: 'user-123' } });
+    });
+
+    it('should apply bookId filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, bookId: 'book-abc' });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.filter).toContainEqual({ term: { bookId: 'book-abc' } });
+    });
+
+    it('should apply status filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, status: ReservationStatus.RETURNED });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.filter).toContainEqual({ term: { status: ReservationStatus.RETURNED } });
+    });
+
+    it('should apply overdueOnly filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, overdueOnly: true });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.must_not).toContainEqual({ term: { status: ReservationStatus.RETURNED } });
+      expect(body.query.bool.filter.some((f: any) => f.range?.dueDate?.lt)).toBe(true);
+    });
+
+    it('should apply reservedAt filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, reservedAt: '2025-01-01' });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.filter).toContainEqual({ range: { reservedAt: { gte: '2025-01-01' } } });
+    });
+
+    it('should apply dueDate filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, dueDate: '2025-12-31' });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.filter).toContainEqual({ range: { dueDate: { lte: '2025-12-31' } } });
+    });
+
+    it('should apply returnedAt filter in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 1, limit: 10, returnedAt: '2025-06-01' });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.query.bool.filter).toContainEqual({ range: { returnedAt: { lte: '2025-06-01' } } });
+    });
+
+    it('should throw error when Elasticsearch returns non-ok response', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: jest.fn().mockResolvedValue('Internal Server Error'),
+      });
+
+      const mockQb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        getMany: jest.fn().mockResolvedValue([mockReservation]),
+      };
+      ormRepositoryWithElastic.createQueryBuilder.mockReturnValue(mockQb as never);
+
+      const result = await repositoryWithElastic.findAll({ page: 1, limit: 10 });
+      expect(result.data).toEqual([mockReservation]);
+    });
+
+    it('should handle numeric total from Elasticsearch', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          hits: {
+            total: 5,
+            hits: [],
+          },
+        }),
+      });
+
+      const result = await repositoryWithElastic.findAll({ page: 1, limit: 10 });
+      expect(result.meta.total).toBe(5);
+    });
+
+    it('should skip hits with null _source', async () => {
+      const hitWithNull = { _source: null };
+      mockFetch.mockResolvedValue(makeElasticResponse([hitWithNull, elasticHit], 2));
+
+      const result = await repositoryWithElastic.findAll({ page: 1, limit: 10 });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].id).toBe('es-res-id');
+    });
+
+    it('should skip hits with missing id in _source', async () => {
+      const hitNoId = { _source: { reservedAt: new Date().toISOString(), dueDate: new Date().toISOString() } };
+      mockFetch.mockResolvedValue(makeElasticResponse([hitNoId], 1));
+
+      const result = await repositoryWithElastic.findAll({ page: 1, limit: 10 });
+
+      expect(result.data).toHaveLength(0);
+    });
+
+    it('should skip hits with missing dates in _source', async () => {
+      const hitNoDates = { _source: { reservation_id: 'id-with-no-dates' } };
+      mockFetch.mockResolvedValue(makeElasticResponse([hitNoDates], 1));
+
+      const result = await repositoryWithElastic.findAll({ page: 1, limit: 10 });
+
+      expect(result.data).toHaveLength(0);
+    });
+
+    it('should use pagination offset in Elasticsearch query', async () => {
+      mockFetch.mockResolvedValue(makeElasticResponse([]));
+
+      await repositoryWithElastic.findAll({ page: 3, limit: 5 });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.from).toBe(10);
+      expect(body.size).toBe(5);
+    });
+  });
 });
+
