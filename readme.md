@@ -1,84 +1,92 @@
 # Biblioteca - Sistema de Gerenciamento de Livros
 
-## Tecnologias Utilizadas
+Aplicacao com frontend em Angular e backend em NestJS, com infraestrutura baseada em Docker (MySQL, Kafka, Elastic, Keycloak e Kong).
 
-- **Backend**: NestJS (Node.js framework), TypeScript, TypeORM (ORM para MySQL), Jest (para testes)
-- **Frontend**: Angular (framework JavaScript/TypeScript)
-- **Banco de Dados**: MySQL (executado via Docker)
-- **Outros**: Docker (apenas para MySQL), ESLint, Prettier
+## Stack
 
-## Como Iniciar o Sistema
+- Backend: NestJS, TypeScript, TypeORM, Jest
+- Frontend: Angular
+- Banco de dados: MySQL
+- Infra: Docker Compose, Kafka, Elasticsearch, Keycloak, Kong/Konga
 
-### Pré-requisitos
+## Pre-requisitos
 
-- Node.js (versão 18 ou superior)
-- npm ou yarn
+- Node.js 18+
+- npm
 - Docker e Docker Compose
 
-### Passos para Iniciar
+## Variaveis de ambiente
 
-1. **Clone o repositório** (se aplicável) e navegue para a pasta raiz do projeto.
+Arquivos de exemplo disponiveis:
 
-2. **Inicie o MySQL via Docker**:
-   ```bash
-   docker-compose up mysql -d
-   ```
-   Isso iniciará o container MySQL em background. O banco de dados estará disponível na porta 3306.
+- `./.env.example` (variaveis de infraestrutura/stack)
+- `./backend/.env.example` (variaveis usadas pelo backend)
 
-3. **Configure o Backend**:
-   - Navegue para a pasta `backend`:
-     ```bash
-     cd backend
-     ```
-   - Instale as dependências:
-     ```bash
-     npm install
-     ```
-   - Execute as migrações do banco de dados (se necessário):
-     ```bash
-     npm run migration:run
-     ```
-   - Inicie o servidor em modo de desenvolvimento:
-     ```bash
-     npm run start:dev
-     ```
-     O backend estará rodando em `http://localhost:3000` (ou a porta configurada).
+Passos sugeridos:
 
-4. **Configure o Frontend**:
-   - Navegue para a pasta `frontend`:
-     ```bash
-     cd frontend
-     ```
-   - Instale as dependências:
-     ```bash
-     npm install
-     ```
-   - Inicie o servidor de desenvolvimento:
-     ```bash
-     npm start
-     ```
-     O frontend estará rodando em `http://localhost:4200` (porta padrão do Angular).
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+```
 
-5. **Acesse a aplicação**:
-   - Abra o navegador e vá para `http://localhost:4200` para acessar o frontend.
-   - O backend estará disponível via API em `http://localhost:3000`.
+Depois ajuste os segredos (`change-me`) antes de subir em ambientes reais.
 
-### Comandos Úteis
+## Rodando em desenvolvimento (Node local)
 
-- **Backend**:
-  - Testes: `npm run test`
-  - Build: `npm run build`
-  - Lint: `npm run lint`
+1. Instale dependencias da raiz:
 
-- **Frontend**:
-  - Testes: `npm run test`
-  - Build: `npm run build`
+```bash
+npm install
+```
 
-- **Docker**:
-  - Parar MySQL: `docker-compose down`
-  - Ver logs: `docker-compose logs mysql`
+2. Instale dependencias dos modulos:
 
-### Notas
+```bash
+npm --prefix backend install
+npm --prefix frontend install
+```
 
-- Certifique-se de que as portas 3000 (backend), 4200 (frontend) e 3306 (MySQL) estejam livres.
-- Para produção, ajuste as configurações de ambiente conforme necessário.
+3. Suba os servicos de apoio (exemplo minimo):
+
+```bash
+docker compose up -d mysql kafka elasticsearch zookeeper
+```
+
+4. Rode frontend e backend juntos pela raiz:
+
+```bash
+npm run dev
+```
+
+Endpoints locais esperados:
+
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:3000`
+
+## Rodando stack completa com Docker
+
+Para subir todos os servicos definidos no `docker-compose.yml` da raiz:
+
+```bash
+docker compose up -d --build
+```
+
+Para parar tudo:
+
+```bash
+docker compose down
+```
+
+## Comandos uteis
+
+- Backend: `npm --prefix backend run start:dev`
+- Frontend: `npm --prefix frontend run start`
+- Testes backend: `npm --prefix backend run test`
+- Build backend: `npm --prefix backend run build`
+- Build frontend: `npm --prefix frontend run build`
+- Logs Docker: `docker compose logs -f`
+
+## Observacoes
+
+- O arquivo `env.md` pode ser usado como referencia de variaveis para producao.
+- Garanta que as portas necessarias estejam livres (`3000`, `4200`, `3306`, `8000`, `8080`, `9200`, `9092`).
